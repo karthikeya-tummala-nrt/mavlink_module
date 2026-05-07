@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
-import 'package:dart_mavlink/crc.dart';
+import 'package:mavlink_module/crc.dart';
 
 class DialectEnums extends IterableMixin<DialectEnum> {
   final List<DialectEnum> _enums;
@@ -372,15 +372,15 @@ class DialectMessage {
 
   int calculateCrcExtra() {
     var crc = CrcX25();
-    crc.accumulateString(name + ' ');
+    crc.accumulateString('$name ');
 
     for (var f in orderedFields) {
       if (f.isExtension) {
         continue;
       }
 
-      crc.accumulateString(f.unitType + ' ');
-      crc.accumulateString(f.name + ' ');
+      crc.accumulateString('${f.unitType} ');
+      crc.accumulateString('${f.name} ');
 
       if (f.parsedType.isArray) {
         crc.accumulate(f.parsedType.arrayLength);
@@ -521,13 +521,22 @@ String capitalize(String s) {
   return s[0].toUpperCase() + s.substring(1).toLowerCase();
 }
 
+String normalizeNumericSegments(String s) {
+  return s.replaceAllMapped(
+    RegExp(r'(\d)_(\d)'),
+        (m) => '${m[1]}p${m[2]}',
+  );
+}
+
 String camelCase(String s) {
+  s = normalizeNumericSegments(s);
   s = s.toLowerCase();
   var sep = s.split('_');
   return sep.map((e) => capitalize(e)).join('');
 }
 
 String lowerCamelCase(String s) {
+  s = normalizeNumericSegments(s);
   s = s.toLowerCase();
   var sep = s.split('_');
   if (sep.length == 1) {
@@ -614,9 +623,9 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
   String content = '';
 
   content += "import 'dart:typed_data';\n";
-  content += "import 'package:dart_mavlink/mavlink_dialect.dart';\n";
-  content += "import 'package:dart_mavlink/mavlink_message.dart';\n";
-  content += "import 'package:dart_mavlink/types.dart';\n";
+  content += "import 'package:mavlink_module/mavlink_dialect.dart';\n";
+  content += "import 'package:mavlink_module/mavlink_message.dart';\n";
+  content += "import 'package:mavlink_module/types.dart';\n";
 
   // Write enum fields
   for (var enm in doc.enums) {
@@ -624,7 +633,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     if (enm.description != null) {
       content += generateAsDartDocumentation(enm.description!);
     }
-    content += '///\n';
+    // content += '///\n';
     content += '/// ${enm.name}\n';
     content += 'typedef ${enm.nameForDart} = int;\n';
 
@@ -636,7 +645,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
         if (entry.description != null) {
           content += generateAsDartDocumentation(entry.description!);
         }
-        content += '///\n';
+        // content += '///\n';
         content += '/// ${entry.name}\n';
         if (entry.deprecated != null) {
           content += '@Deprecated("Replaced by [${entry.deprecated!.replacedBy}] since ${entry.deprecated!.since}. ${entry.deprecated!.text}")\n';
@@ -649,7 +658,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
   // Wrirte message classes.
   for (var msg in doc.messages) {
     content += generateAsDartDocumentation(msg.description);
-    content += '///\n';
+    // content += '///\n';
     content += '/// ${msg.name}\n';
     content += 'class ${msg.nameForDart} implements MavlinkMessage {\n';
     content += '\n';
@@ -666,21 +675,21 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
 
     for (var field in msg.orderedFields) {
       content += generateAsDartDocumentation(field.description);
-      content += '///\n';
+      // content += '///\n';
       content += '/// MAVLink type: ${field.type}\n';
       if (field.units != null) {
-        content += '///\n';
+        // content += '///\n';
         content += '/// units: ${field.units!}\n';
       }
       if (field.enum_ != null) {
-        content += '///\n';
+        // content += '///\n';
         content += '/// enum: [${camelCase(field.enum_!)}]\n';
       }
       if (field.isExtension) {
-        content += '///\n';
+        // content += '///\n';
         content += '/// Extensions field for MAVLink 2.\n';
       }
-      content += '///\n';
+      // content += '///\n';
       content += '/// ${field.name}\n';
       content += 'final ${asDartType(field.type, field.enum_)} ${field.nameForDart};\n';
     }
@@ -696,7 +705,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
       content += '});\n';
     } else {
       content += '})\n';
-      content += ':' + arrayInitializationCode.substring(0, arrayInitializationCode.length - 1) + ';';
+      content += ':${arrayInitializationCode.substring(0, arrayInitializationCode.length - 1)};';
     }
     content += '\n';
 
@@ -860,8 +869,8 @@ default:
   return true;
 }
 
-String generateAsDartDocumentation(String str) 
-  => str.split('\n').map((s) => '/// ' + s.trimLeft()).join('\n') + '\n';
+String generateAsDartDocumentation(String str)
+=> '${str.split('\n').map((s) => '/// ${s.trimLeft()}').join('\n')}\n';
 
 String asDartType(String mavlinkType, String? enum_) {
   var basicTypes = [
