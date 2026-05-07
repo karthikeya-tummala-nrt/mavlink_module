@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:dart_mavlink/dialects/common.dart';
+import 'package:mavlink_module/dialects/common.dart';
 import 'package:test/test.dart';
 
 void main() {

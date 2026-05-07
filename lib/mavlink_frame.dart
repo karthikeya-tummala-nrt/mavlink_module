@@ -1,6 +1,6 @@
-library dart_mavlink;
+library mavlink_module;
 
-import 'package:dart_mavlink/crc.dart';
+import 'package:mavlink_module/crc.dart';
 
 import 'mavlink_version.dart';
 import 'mavlink_message.dart';

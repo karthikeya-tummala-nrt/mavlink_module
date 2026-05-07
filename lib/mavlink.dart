@@ -1,4 +1,4 @@
-library dart_mavlink;
+library mavlink_module;
 
 export 'mavlink_dialect.dart';
 export 'mavlink_frame.dart';

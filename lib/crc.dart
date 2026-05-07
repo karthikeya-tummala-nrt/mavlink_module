@@ -1,4 +1,4 @@
-library dart_mavlink;
+library mavlink_module;
 
 class CrcX25 {
   static final _x25InitCrc = 0xffff;

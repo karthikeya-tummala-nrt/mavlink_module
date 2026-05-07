@@ -1,4 +1,4 @@
-# dart_mavlink
+# mavlink_module
 
 This is a Dart package for parsing and serializing MAVLink v1/v2 packets. See `example/sitl_test.dart` for example usage. Some high level concepts are covered below.
 
@@ -7,8 +7,8 @@ This is a Dart package for parsing and serializing MAVLink v1/v2 packets. See `e
 Import the library.
 
 ```dart
-import 'package:dart_mavlink/mavlink.dart';
-import 'package:dart_mavlink/dialects/common.dart';
+import 'package:mavlink_module/mavlink.dart';
+import 'package:mavlink_module/dialects/common.dart';
 ```
 
 ### Parsing Messages

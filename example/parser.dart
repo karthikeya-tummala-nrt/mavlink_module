@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dart_mavlink/mavlink.dart';
-import 'package:dart_mavlink/dialects/common.dart';
+import 'package:mavlink_module/mavlink.dart';
+import 'package:mavlink_module/dialects/common.dart';
 
 void main() {
   var dialect = MavlinkDialectCommon();

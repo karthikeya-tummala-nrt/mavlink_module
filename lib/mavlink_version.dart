@@ -1,4 +1,4 @@
-library dart_mavlink;
+library mavlink_module;
 
 enum MavlinkVersion {
   v1,

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:dart_mavlink/mavlink.dart';
-import 'package:dart_mavlink/dialects/common.dart';
+import 'package:mavlink_module/mavlink.dart';
+import 'package:mavlink_module/dialects/common.dart';
 
 void main() async {
   var dialect = MavlinkDialectCommon();

@@ -1,4 +1,4 @@
-library dart_mavlink;
+library mavlink_module;
 
 import 'dart:typed_data';
 

@@ -1,6 +1,6 @@
-import 'package:dart_mavlink/dialects/common.dart';
-import 'package:dart_mavlink/mavlink_parser.dart';
-import 'package:dart_mavlink/mavlink_version.dart';
+import 'package:mavlink_module/dialects/common.dart';
+import 'package:mavlink_module/mavlink_parser.dart';
+import 'package:mavlink_module/mavlink_version.dart';
 import 'package:test/test.dart';
 import 'dart:typed_data';
 
