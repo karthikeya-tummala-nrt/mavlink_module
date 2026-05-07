@@ -338,12 +338,37 @@ const MavType mavTypeWinch = 42;
 /// MAV_TYPE_GENERIC_MULTIROTOR
 const MavType mavTypeGenericMultirotor = 43;
 
-/// Illuminator. An illuminator is a light source that is used for lighting up dark areas external to the sytstem: e.g. a torch or searchlight (as opposed to a light source for illuminating the system itself, e.g. an indicator light).
+/// Illuminator. An illuminator is a light source that is used for lighting up dark areas external to the system: e.g. a torch or searchlight (as opposed to a light source for illuminating the system itself, e.g. an indicator light).
 ///
 /// MAV_TYPE_ILLUMINATOR
 const MavType mavTypeIlluminator = 44;
 
-/// These flags encode the MAV mode.
+/// Orbiter spacecraft. Includes satellites orbiting terrestrial and extra-terrestrial bodies. Follows NASA Spacecraft Classification.
+///
+/// MAV_TYPE_SPACECRAFT_ORBITER
+const MavType mavTypeSpacecraftOrbiter = 45;
+
+/// A generic four-legged ground vehicle (e.g., a robot dog).
+///
+/// MAV_TYPE_GROUND_QUADRUPED
+const MavType mavTypeGroundQuadruped = 46;
+
+/// VTOL hybrid of helicopter and autogyro. It has a main rotor for lift and separate propellers for forward flight. The rotor must be powered for hover but can autorotate in cruise flight. See: https://en.wikipedia.org/wiki/Gyrodyne
+///
+/// MAV_TYPE_VTOL_GYRODYNE
+const MavType mavTypeVtolGyrodyne = 47;
+
+/// Gripper
+///
+/// MAV_TYPE_GRIPPER
+const MavType mavTypeGripper = 48;
+
+/// Radio
+///
+/// MAV_TYPE_RADIO
+const MavType mavTypeRadio = 49;
+
+/// These flags encode the MAV mode, see MAV_MODE enum for useful combinations.
 ///
 /// MAV_MODE_FLAG
 typedef MavModeFlag = int;
@@ -383,7 +408,7 @@ const MavModeFlag mavModeFlagAutoEnabled = 4;
 /// MAV_MODE_FLAG_TEST_ENABLED
 const MavModeFlag mavModeFlagTestEnabled = 2;
 
-/// 0b00000001 Reserved for future use.
+/// 0b00000001 system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
 ///
 /// MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
 const MavModeFlag mavModeFlagCustomModeEnabled = 1;
@@ -482,9 +507,18 @@ const MavState mavStatePoweroff = 7;
 /// MAV_STATE_FLIGHT_TERMINATION
 const MavState mavStateFlightTermination = 8;
 
-/// Component ids (values) for the different types and instances of onboard hardware/software that might make up a MAVLink system (autopilot, cameras, servos, GPS systems, avoidance systems etc.).
-/// Components must use the appropriate ID in their source address when sending messages. Components can also use IDs to determine if they are the intended recipient of an incoming message. The MAV_COMP_ID_ALL value is used to indicate messages that must be processed by all components.
-/// When creating new entries, components that can have multiple instances (e.g. cameras, servos etc.) should be allocated sequential values. An appropriate number of values should be left free after these components to allow the number of instances to be expanded.
+/// Legacy component ID values for particular types of hardware/software that might make up a MAVLink system (autopilot, cameras, servos, avoidance systems etc.).
+///
+/// Components are not required or expected to use IDs with names that correspond to their type or function, but may choose to do so.
+/// Using an ID that matches the type may slightly reduce the chances of component id clashes, as, for historical reasons, it is less likely to be used by some other type of component.
+/// System integration will still need to ensure that all components have unique IDs.
+///
+/// Component IDs are used for addressing messages to a particular component within a system.
+/// A component can use any unique ID between 1 and 255 (MAV_COMP_ID_ALL value is the broadcast address, used to send to all components).
+///
+/// Historically component ID were also used for identifying the type of component.
+/// New code must not use component IDs to infer the component type, but instead check the MAV_TYPE in the HEARTBEAT message!
+///
 ///
 /// MAV_COMPONENT
 typedef MavComponent = int;
@@ -904,6 +938,21 @@ const MavComponent mavCompIdCamera5 = 104;
 /// MAV_COMP_ID_CAMERA6
 const MavComponent mavCompIdCamera6 = 105;
 
+/// Radio #1.
+///
+/// MAV_COMP_ID_RADIO
+const MavComponent mavCompIdRadio = 110;
+
+/// Radio #2.
+///
+/// MAV_COMP_ID_RADIO2
+const MavComponent mavCompIdRadio2 = 111;
+
+/// Radio #3.
+///
+/// MAV_COMP_ID_RADIO3
+const MavComponent mavCompIdRadio3 = 112;
+
 /// Servo #1.
 ///
 /// MAV_COMP_ID_SERVO1
@@ -1302,114 +1351,6 @@ class Heartbeat implements MavlinkMessage {
   }
 }
 
-/// Version and capability of protocol version. This message can be requested with MAV_CMD_REQUEST_MESSAGE and is used as part of the handshaking to establish which MAVLink version should be used on the network. Every node should respond to a request for PROTOCOL_VERSION to enable the handshaking. Library implementers should consider adding this into the default decoding state machine to allow the protocol core to respond directly.
-///
-/// PROTOCOL_VERSION
-class ProtocolVersion implements MavlinkMessage {
-  static const int _mavlinkMessageId = 300;
-
-  static const int _mavlinkCrcExtra = 217;
-
-  static const int mavlinkEncodedLength = 22;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// Currently active MAVLink version number * 100: v1.0 is 100, v2.0 is 200, etc.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// version
-  final uint16_t version;
-
-  /// Minimum MAVLink version supported
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// min_version
-  final uint16_t minVersion;
-
-  /// Maximum MAVLink version supported (set to the same value as version by default)
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// max_version
-  final uint16_t maxVersion;
-
-  /// The first 8 bytes (not characters printed in hex!) of the git hash.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// spec_version_hash
-  final List<int8_t> specVersionHash;
-
-  /// The first 8 bytes (not characters printed in hex!) of the git hash.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// library_version_hash
-  final List<int8_t> libraryVersionHash;
-
-  ProtocolVersion({
-    required this.version,
-    required this.minVersion,
-    required this.maxVersion,
-    required this.specVersionHash,
-    required this.libraryVersionHash,
-  });
-
-  ProtocolVersion copyWith({
-    uint16_t? version,
-    uint16_t? minVersion,
-    uint16_t? maxVersion,
-    List<int8_t>? specVersionHash,
-    List<int8_t>? libraryVersionHash,
-  }) {
-    return ProtocolVersion(
-      version: version ?? this.version,
-      minVersion: minVersion ?? this.minVersion,
-      maxVersion: maxVersion ?? this.maxVersion,
-      specVersionHash: specVersionHash ?? this.specVersionHash,
-      libraryVersionHash: libraryVersionHash ?? this.libraryVersionHash,
-    );
-  }
-
-  factory ProtocolVersion.parse(ByteData data_) {
-    if (data_.lengthInBytes < ProtocolVersion.mavlinkEncodedLength) {
-      var len = ProtocolVersion.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var version = data_.getUint16(0, Endian.little);
-    var minVersion = data_.getUint16(2, Endian.little);
-    var maxVersion = data_.getUint16(4, Endian.little);
-    var specVersionHash = MavlinkMessage.asUint8List(data_, 6, 8);
-    var libraryVersionHash = MavlinkMessage.asUint8List(data_, 14, 8);
-
-    return ProtocolVersion(
-        version: version,
-        minVersion: minVersion,
-        maxVersion: maxVersion,
-        specVersionHash: specVersionHash,
-        libraryVersionHash: libraryVersionHash);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint16(0, version, Endian.little);
-    data_.setUint16(2, minVersion, Endian.little);
-    data_.setUint16(4, maxVersion, Endian.little);
-    MavlinkMessage.setUint8List(data_, 6, specVersionHash);
-    MavlinkMessage.setUint8List(data_, 14, libraryVersionHash);
-    return data_;
-  }
-}
-
 class MavlinkDialectMinimal implements MavlinkDialect {
   static const int mavlinkVersion = 3;
 
@@ -1421,8 +1362,6 @@ class MavlinkDialectMinimal implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
-      case 300:
-        return ProtocolVersion.parse(data);
       default:
         return null;
     }
@@ -1433,8 +1372,6 @@ class MavlinkDialectMinimal implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat._mavlinkCrcExtra;
-      case 300:
-        return ProtocolVersion._mavlinkCrcExtra;
       default:
         return -1;
     }

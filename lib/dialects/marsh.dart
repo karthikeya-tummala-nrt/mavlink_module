@@ -8871,6 +8871,193 @@ const GlobalPositionFlags globalPositionUnhealthy = 1;
 /// GLOBAL_POSITION_PRIMARY
 const GlobalPositionFlags globalPositionPrimary = 2;
 
+/// Component types for different nodes of the simulator network (flight model, controls, visualisation etc.). Components will always receive messages from the Manager relevant for their type. Only the first component in a network with a given system ID and type will have its messages forwarded by the Manager, all other ones will only be treated as output (will be shadowed). This enum is an extension of MAV_TYPE documented at https://mavlink.io/en/messages/minimal.html#MAV_TYPE
+///
+/// MARSH_TYPE
+typedef MarshType = int;
+
+/// The simulation manager responsible for routing packets between different nodes. Typically MARSH Manager, see https://marsh-sim.github.io/manager.html
+///
+/// MARSH_TYPE_MANAGER
+const MarshType marshTypeManager = 100;
+
+/// Component simulating flight dynamics of the aircraft.
+///
+/// MARSH_TYPE_FLIGHT_MODEL
+const MarshType marshTypeFlightModel = 101;
+
+/// Component providing pilot control inputs.
+///
+/// MARSH_TYPE_CONTROLS
+const MarshType marshTypeControls = 102;
+
+/// Component showing the visual situation to the pilot.
+///
+/// MARSH_TYPE_VISUALISATION
+const MarshType marshTypeVisualisation = 103;
+
+/// Component implementing pilot instrument panel.
+///
+/// MARSH_TYPE_INSTRUMENTS
+const MarshType marshTypeInstruments = 104;
+
+/// Component that moves the entire cockpit for motion cueing.
+///
+/// MARSH_TYPE_MOTION_PLATFORM
+const MarshType marshTypeMotionPlatform = 105;
+
+/// Component for in-seat motion cueing.
+///
+/// MARSH_TYPE_GSEAT
+const MarshType marshTypeGseat = 106;
+
+/// Component providing gaze data of pilot eyes.
+///
+/// MARSH_TYPE_EYE_TRACKER
+const MarshType marshTypeEyeTracker = 107;
+
+/// Component measuring and actuating forces on pilot control inputs.
+///
+/// MARSH_TYPE_CONTROL_LOADING
+const MarshType marshTypeControlLoading = 108;
+
+/// Component providing vibrations for system identification, road rumble, gusts, etc.
+///
+/// MARSH_TYPE_VIBRATION_SOURCE
+const MarshType marshTypeVibrationSource = 109;
+
+/// Component providing target for the pilot to follow like controls positions, aircraft state, ILS path etc.
+///
+/// MARSH_TYPE_PILOT_TARGET
+const MarshType marshTypePilotTarget = 110;
+
+/// Principal component controlling the main scenario of a given test, (unlike lower level MARSH_TYPE_PILOT_TARGET or MARSH_TYPE_MANAGER for overall communication).
+///
+/// MARSH_TYPE_EXPERIMENT_DIRECTOR
+const MarshType marshTypeExperimentDirector = 111;
+
+/// These values are MARSH-specific modes intended to be sent in custom_mode field of HEARTBEAT message.
+/// Prefer defining values in the most significant byte (between 2^24 and 2^31) to leave the lower three bytes to contain a message id
+///
+/// MARSH_MODE_FLAGS
+typedef MarshModeFlags = int;
+
+/// Request Manager to only send one specific message, advised for very resource limited nodes or with control flow limitations like Simulink.
+/// That message id should be in the lower three bytes of the mode, which can be done by adding it to the flags.
+///
+/// MARSH_MODE_SINGLE_MESSAGE
+const MarshModeFlags marshModeSingleMessage = 16777216;
+
+/// Request Manager to send every message going out to any of the clients.
+///
+/// MARSH_MODE_ALL_MESSAGES
+const MarshModeFlags marshModeAllMessages = 33554432;
+
+/// Specific axis of pilot control inputs, with order corresponding to x, y, z, r fields in MANUAL_CONTROL message.
+///
+/// CONTROL_AXIS
+typedef ControlAxis = int;
+
+/// Roll axis, with positive values corresponding to stick right movement, causing the vehicle to roll right. For helicopters this is lateral cyclic.
+///
+/// CONTROL_AXIS_ROLL
+const ControlAxis controlAxisRoll = 0;
+
+/// Pitch axis, with positive values corresponding to stick forward movement, causing the vehicle to move nose down. For helicopters this is longitudinal cyclic.
+///
+/// CONTROL_AXIS_PITCH
+const ControlAxis controlAxisPitch = 1;
+
+/// Main thrust, with positive values corresponding to going faster and higher. For helicopters this is collective.
+///
+/// CONTROL_AXIS_THRUST
+const ControlAxis controlAxisThrust = 2;
+
+/// Yaw axis, with positive values corresponding to pushing right pedal, causing the vehicle to face right direction. For helicopters this is tail collective.
+///
+/// CONTROL_AXIS_YAW
+const ControlAxis controlAxisYaw = 3;
+
+/// Usage of MANUAL_SETPOINT message, sent in mode_switch field.
+///
+/// MARSH_MANUAL_SETPOINT_MODE
+typedef MarshManualSetpointMode = int;
+
+/// Values for target inceptors positions that the pilot should follow.
+///
+/// MARSH_MANUAL_SETPOINT_MODE_TARGET
+const MarshManualSetpointMode marshManualSetpointModeTarget = 0;
+
+/// Values for inceptors trim positions, the exact meaning depends on the flight model.
+///
+/// MARSH_MANUAL_SETPOINT_MODE_TRIM
+const MarshManualSetpointMode marshManualSetpointModeTrim = 1;
+
+/// Mode of a motion platform system.
+///
+/// MOTION_PLATFORM_MODE
+typedef MotionPlatformMode = int;
+
+/// Mode information is unsupported on this device.
+///
+/// MOTION_PLATFORM_MODE_UNKNOWN
+const MotionPlatformMode motionPlatformModeUnknown = 0;
+
+/// Mode is currently not available, but may be in different condition.
+///
+/// MOTION_PLATFORM_MODE_UNINITIALIZED
+const MotionPlatformMode motionPlatformModeUninitialized = 1;
+
+/// Platform actuators are turned off, but control system is responsive.
+///
+/// MOTION_PLATFORM_MODE_OFF
+const MotionPlatformMode motionPlatformModeOff = 2;
+
+/// Platform is in the lowest position and/or locked, appropriate for personnel entry.
+///
+/// MOTION_PLATFORM_MODE_SETTLED
+const MotionPlatformMode motionPlatformModeSettled = 3;
+
+/// Platform is in a neutral reference position, not accepting movement commands.
+///
+/// MOTION_PLATFORM_MODE_NEUTRAL
+const MotionPlatformMode motionPlatformModeNeutral = 4;
+
+/// Platform is stopped in any position, not accepting movement commands.
+///
+/// MOTION_PLATFORM_MODE_FROZEN
+const MotionPlatformMode motionPlatformModeFrozen = 5;
+
+/// Platform is in any position, accepting movement commands.
+///
+/// MOTION_PLATFORM_MODE_ENGAGED
+const MotionPlatformMode motionPlatformModeEngaged = 6;
+
+/// General error state of a motion platform system.
+///
+/// MOTION_PLATFORM_HEALTH
+typedef MotionPlatformHealth = int;
+
+/// System is operating correctly.
+///
+/// MOTION_PLATFORM_HEALTH_OK
+const MotionPlatformHealth motionPlatformHealthOk = 0;
+
+/// There is at least one warning present, but operation can be continued.
+///
+/// MOTION_PLATFORM_HEALTH_WARNING
+const MotionPlatformHealth motionPlatformHealthWarning = 1;
+
+/// There is a failure or misconfiguration that requires operator's attention for correct operation.
+///
+/// MOTION_PLATFORM_HEALTH_ERROR
+const MotionPlatformHealth motionPlatformHealthError = 2;
+
+/// There is a major failure that requires immediate operator action to maintain safety.
+///
+/// MOTION_PLATFORM_HEALTH_CRITICAL
+const MotionPlatformHealth motionPlatformHealthCritical = 3;
+
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
 /// HEARTBEAT
@@ -46720,363 +46907,15 @@ class HygrometerSensor implements MavlinkMessage {
   }
 }
 
-/// Raw RC Data
+/// Send data about a control axis from a control loading system. This is the primary message for logging data from MARSH_TYPE_CONTROL_LOADING.
 ///
-/// CUBEPILOT_RAW_RC
-class CubepilotRawRc implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50001;
-
-  static const int _mavlinkCrcExtra = 246;
-
-  static const int mavlinkEncodedLength = 32;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  ///
-  ///
-  /// MAVLink type: uint8_t[32]
-  ///
-  /// rc_raw
-  final List<int8_t> rcRaw;
-
-  CubepilotRawRc({
-    required this.rcRaw,
-  });
-
-  CubepilotRawRc copyWith({
-    List<int8_t>? rcRaw,
-  }) {
-    return CubepilotRawRc(
-      rcRaw: rcRaw ?? this.rcRaw,
-    );
-  }
-
-  factory CubepilotRawRc.parse(ByteData data_) {
-    if (data_.lengthInBytes < CubepilotRawRc.mavlinkEncodedLength) {
-      var len = CubepilotRawRc.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var rcRaw = MavlinkMessage.asUint8List(data_, 0, 32);
-
-    return CubepilotRawRc(rcRaw: rcRaw);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    MavlinkMessage.setUint8List(data_, 0, rcRaw);
-    return data_;
-  }
-}
-
-/// Information about video stream
-///
-/// HERELINK_VIDEO_STREAM_INFORMATION
-class HerelinkVideoStreamInformation implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50002;
-
-  static const int _mavlinkCrcExtra = 181;
-
-  static const int mavlinkEncodedLength = 246;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// Frame rate.
-  ///
-  /// MAVLink type: float
-  ///
-  /// units: Hz
-  ///
-  /// framerate
-  final float framerate;
-
-  /// Bit rate.
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// units: bits/s
-  ///
-  /// bitrate
-  final uint32_t bitrate;
-
-  /// Horizontal resolution.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: pix
-  ///
-  /// resolution_h
-  final uint16_t resolutionH;
-
-  /// Vertical resolution.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: pix
-  ///
-  /// resolution_v
-  final uint16_t resolutionV;
-
-  /// Video image rotation clockwise.
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// units: deg
-  ///
-  /// rotation
-  final uint16_t rotation;
-
-  /// Video Stream ID (1 for first, 2 for second, etc.)
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// camera_id
-  final uint8_t cameraId;
-
-  /// Number of streams available.
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// status
-  final uint8_t status;
-
-  /// Video stream URI (TCP or RTSP URI ground station should connect to) or port number (UDP port ground station should listen to).
-  ///
-  /// MAVLink type: char[230]
-  ///
-  /// uri
-  final List<char> uri;
-
-  HerelinkVideoStreamInformation({
-    required this.framerate,
-    required this.bitrate,
-    required this.resolutionH,
-    required this.resolutionV,
-    required this.rotation,
-    required this.cameraId,
-    required this.status,
-    required this.uri,
-  });
-
-  HerelinkVideoStreamInformation copyWith({
-    float? framerate,
-    uint32_t? bitrate,
-    uint16_t? resolutionH,
-    uint16_t? resolutionV,
-    uint16_t? rotation,
-    uint8_t? cameraId,
-    uint8_t? status,
-    List<char>? uri,
-  }) {
-    return HerelinkVideoStreamInformation(
-      framerate: framerate ?? this.framerate,
-      bitrate: bitrate ?? this.bitrate,
-      resolutionH: resolutionH ?? this.resolutionH,
-      resolutionV: resolutionV ?? this.resolutionV,
-      rotation: rotation ?? this.rotation,
-      cameraId: cameraId ?? this.cameraId,
-      status: status ?? this.status,
-      uri: uri ?? this.uri,
-    );
-  }
-
-  factory HerelinkVideoStreamInformation.parse(ByteData data_) {
-    if (data_.lengthInBytes <
-        HerelinkVideoStreamInformation.mavlinkEncodedLength) {
-      var len = HerelinkVideoStreamInformation.mavlinkEncodedLength -
-          data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var framerate = data_.getFloat32(0, Endian.little);
-    var bitrate = data_.getUint32(4, Endian.little);
-    var resolutionH = data_.getUint16(8, Endian.little);
-    var resolutionV = data_.getUint16(10, Endian.little);
-    var rotation = data_.getUint16(12, Endian.little);
-    var cameraId = data_.getUint8(14);
-    var status = data_.getUint8(15);
-    var uri = MavlinkMessage.asInt8List(data_, 16, 230);
-
-    return HerelinkVideoStreamInformation(
-        framerate: framerate,
-        bitrate: bitrate,
-        resolutionH: resolutionH,
-        resolutionV: resolutionV,
-        rotation: rotation,
-        cameraId: cameraId,
-        status: status,
-        uri: uri);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, framerate, Endian.little);
-    data_.setUint32(4, bitrate, Endian.little);
-    data_.setUint16(8, resolutionH, Endian.little);
-    data_.setUint16(10, resolutionV, Endian.little);
-    data_.setUint16(12, rotation, Endian.little);
-    data_.setUint8(14, cameraId);
-    data_.setUint8(15, status);
-    MavlinkMessage.setInt8List(data_, 16, uri);
-    return data_;
-  }
-}
-
-/// Herelink Telemetry
-///
-/// HERELINK_TELEM
-class HerelinkTelem implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50003;
-
-  static const int _mavlinkCrcExtra = 62;
-
-  static const int mavlinkEncodedLength = 19;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  ///
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// rf_freq
-  final uint32_t rfFreq;
-
-  ///
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// link_bw
-  final uint32_t linkBw;
-
-  ///
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// link_rate
-  final uint32_t linkRate;
-
-  ///
-  ///
-  /// MAVLink type: int16_t
-  ///
-  /// snr
-  final int16_t snr;
-
-  ///
-  ///
-  /// MAVLink type: int16_t
-  ///
-  /// cpu_temp
-  final int16_t cpuTemp;
-
-  ///
-  ///
-  /// MAVLink type: int16_t
-  ///
-  /// board_temp
-  final int16_t boardTemp;
-
-  ///
-  ///
-  /// MAVLink type: uint8_t
-  ///
-  /// rssi
-  final uint8_t rssi;
-
-  HerelinkTelem({
-    required this.rfFreq,
-    required this.linkBw,
-    required this.linkRate,
-    required this.snr,
-    required this.cpuTemp,
-    required this.boardTemp,
-    required this.rssi,
-  });
-
-  HerelinkTelem copyWith({
-    uint32_t? rfFreq,
-    uint32_t? linkBw,
-    uint32_t? linkRate,
-    int16_t? snr,
-    int16_t? cpuTemp,
-    int16_t? boardTemp,
-    uint8_t? rssi,
-  }) {
-    return HerelinkTelem(
-      rfFreq: rfFreq ?? this.rfFreq,
-      linkBw: linkBw ?? this.linkBw,
-      linkRate: linkRate ?? this.linkRate,
-      snr: snr ?? this.snr,
-      cpuTemp: cpuTemp ?? this.cpuTemp,
-      boardTemp: boardTemp ?? this.boardTemp,
-      rssi: rssi ?? this.rssi,
-    );
-  }
-
-  factory HerelinkTelem.parse(ByteData data_) {
-    if (data_.lengthInBytes < HerelinkTelem.mavlinkEncodedLength) {
-      var len = HerelinkTelem.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var rfFreq = data_.getUint32(0, Endian.little);
-    var linkBw = data_.getUint32(4, Endian.little);
-    var linkRate = data_.getUint32(8, Endian.little);
-    var snr = data_.getInt16(12, Endian.little);
-    var cpuTemp = data_.getInt16(14, Endian.little);
-    var boardTemp = data_.getInt16(16, Endian.little);
-    var rssi = data_.getUint8(18);
-
-    return HerelinkTelem(
-        rfFreq: rfFreq,
-        linkBw: linkBw,
-        linkRate: linkRate,
-        snr: snr,
-        cpuTemp: cpuTemp,
-        boardTemp: boardTemp,
-        rssi: rssi);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, rfFreq, Endian.little);
-    data_.setUint32(4, linkBw, Endian.little);
-    data_.setUint32(8, linkRate, Endian.little);
-    data_.setInt16(12, snr, Endian.little);
-    data_.setInt16(14, cpuTemp, Endian.little);
-    data_.setInt16(16, boardTemp, Endian.little);
-    data_.setUint8(18, rssi);
-    return data_;
-  }
-}
-
-/// Start firmware update with encapsulated data.
-///
-/// CUBEPILOT_FIRMWARE_UPDATE_START
-class CubepilotFirmwareUpdateStart implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50004;
+/// CONTROL_LOADING_AXIS
+class ControlLoadingAxis implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52501;
 
   static const int _mavlinkCrcExtra = 240;
 
-  static const int mavlinkEncodedLength = 10;
+  static const int mavlinkEncodedLength = 17;
 
   @override
   int get mavlinkMessageId => _mavlinkMessageId;
@@ -47084,98 +46923,115 @@ class CubepilotFirmwareUpdateStart implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// FW Size.
+  /// Timestamp (time since system boot).
   ///
   /// MAVLink type: uint32_t
   ///
-  /// units: bytes
+  /// units: ms
   ///
-  /// size
-  final uint32_t size;
+  /// time_boot_ms
+  final uint32_t timeBootMs;
 
-  /// FW CRC.
+  /// Axis position
   ///
-  /// MAVLink type: uint32_t
+  /// MAVLink type: float
   ///
-  /// crc
-  final uint32_t crc;
+  /// units: deg
+  ///
+  /// position
+  final float position;
 
-  /// System ID.
+  /// Axis velocity
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: deg/s
+  ///
+  /// velocity
+  final float velocity;
+
+  /// Force applied in the pilot in the direction of movement axis (not gripping force), measured at the position of pilot's third finger (ring). Unit N (Newton), currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// force
+  final float force;
+
+  /// Control axis on which the measurements were taken.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// target_system
-  final uint8_t targetSystem;
-
-  /// Component ID.
+  /// enum: [ControlAxis]
   ///
-  /// MAVLink type: uint8_t
-  ///
-  /// target_component
-  final uint8_t targetComponent;
+  /// axis
+  final ControlAxis axis;
 
-  CubepilotFirmwareUpdateStart({
-    required this.size,
-    required this.crc,
-    required this.targetSystem,
-    required this.targetComponent,
+  ControlLoadingAxis({
+    required this.timeBootMs,
+    required this.position,
+    required this.velocity,
+    required this.force,
+    required this.axis,
   });
 
-  CubepilotFirmwareUpdateStart copyWith({
-    uint32_t? size,
-    uint32_t? crc,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
+  ControlLoadingAxis copyWith({
+    uint32_t? timeBootMs,
+    float? position,
+    float? velocity,
+    float? force,
+    ControlAxis? axis,
   }) {
-    return CubepilotFirmwareUpdateStart(
-      size: size ?? this.size,
-      crc: crc ?? this.crc,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
+    return ControlLoadingAxis(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      position: position ?? this.position,
+      velocity: velocity ?? this.velocity,
+      force: force ?? this.force,
+      axis: axis ?? this.axis,
     );
   }
 
-  factory CubepilotFirmwareUpdateStart.parse(ByteData data_) {
-    if (data_.lengthInBytes <
-        CubepilotFirmwareUpdateStart.mavlinkEncodedLength) {
-      var len = CubepilotFirmwareUpdateStart.mavlinkEncodedLength -
-          data_.lengthInBytes;
+  factory ControlLoadingAxis.parse(ByteData data_) {
+    if (data_.lengthInBytes < ControlLoadingAxis.mavlinkEncodedLength) {
+      var len = ControlLoadingAxis.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var size = data_.getUint32(0, Endian.little);
-    var crc = data_.getUint32(4, Endian.little);
-    var targetSystem = data_.getUint8(8);
-    var targetComponent = data_.getUint8(9);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var position = data_.getFloat32(4, Endian.little);
+    var velocity = data_.getFloat32(8, Endian.little);
+    var force = data_.getFloat32(12, Endian.little);
+    var axis = data_.getUint8(16);
 
-    return CubepilotFirmwareUpdateStart(
-        size: size,
-        crc: crc,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent);
+    return ControlLoadingAxis(
+        timeBootMs: timeBootMs,
+        position: position,
+        velocity: velocity,
+        force: force,
+        axis: axis);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, size, Endian.little);
-    data_.setUint32(4, crc, Endian.little);
-    data_.setUint8(8, targetSystem);
-    data_.setUint8(9, targetComponent);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, position, Endian.little);
+    data_.setFloat32(8, velocity, Endian.little);
+    data_.setFloat32(12, force, Endian.little);
+    data_.setUint8(16, axis);
     return data_;
   }
 }
 
-/// offset response to encapsulated data.
+/// State report for motion platform used for moving the cockpit with the pilot for motion cueing. This is the primary message for MARSH_TYPE_MOTION_PLATFORM.
 ///
-/// CUBEPILOT_FIRMWARE_UPDATE_RESP
-class CubepilotFirmwareUpdateResp implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50005;
+/// MOTION_PLATFORM_STATE
+class MotionPlatformState implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52502;
 
-  static const int _mavlinkCrcExtra = 152;
+  static const int _mavlinkCrcExtra = 88;
 
-  static const int mavlinkEncodedLength = 6;
+  static const int mavlinkEncodedLength = 78;
 
   @override
   int get mavlinkMessageId => _mavlinkMessageId;
@@ -47183,77 +47039,1080 @@ class CubepilotFirmwareUpdateResp implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// FW Offset.
+  /// Timestamp (time since system boot).
   ///
   /// MAVLink type: uint32_t
   ///
-  /// units: bytes
+  /// units: ms
   ///
-  /// offset
-  final uint32_t offset;
+  /// time_boot_ms
+  final uint32_t timeBootMs;
 
-  /// System ID.
+  /// X axis (surge) position, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// x
+  final float x;
+
+  /// Y axis (sway) position, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// y
+  final float y;
+
+  /// Z axis (heave) position, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// z
+  final float z;
+
+  /// Roll position, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// roll
+  final float roll;
+
+  /// Pitch position, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// pitch
+  final float pitch;
+
+  /// Yaw position, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// yaw
+  final float yaw;
+
+  /// X axis (surge) velocity, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_x
+  final float velX;
+
+  /// Y axis (sway) velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_y
+  final float velY;
+
+  /// Z axis (heave) velocity, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s
+  ///
+  /// vel_z
+  final float velZ;
+
+  /// Roll velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_roll
+  final float velRoll;
+
+  /// Pitch velocity, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_pitch
+  final float velPitch;
+
+  /// Yaw velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_yaw
+  final float velYaw;
+
+  /// X axis (surge) acceleration, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_x
+  final float accX;
+
+  /// Y axis (sway) acceleration, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_y
+  final float accY;
+
+  /// Z axis (heave) acceleration, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_z
+  final float accZ;
+
+  /// Roll acceleration, positive right. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_roll
+  final float accRoll;
+
+  /// Pitch acceleration, positive nose up. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_pitch
+  final float accPitch;
+
+  /// Yaw acceleration, positive right. Unit rad/s/s, currently not part of mavschema.xsd
+  ///
+  /// MAVLink type: float
+  ///
+  /// acc_yaw
+  final float accYaw;
+
+  /// Generic system health (error and warning) status.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// target_system
-  final uint8_t targetSystem;
+  /// enum: [MotionPlatformHealth]
+  ///
+  /// health
+  final MotionPlatformHealth health;
 
-  /// Component ID.
+  /// Generic system operating mode.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// target_component
-  final uint8_t targetComponent;
+  /// enum: [MotionPlatformMode]
+  ///
+  /// mode
+  final MotionPlatformMode mode;
 
-  CubepilotFirmwareUpdateResp({
-    required this.offset,
-    required this.targetSystem,
-    required this.targetComponent,
+  MotionPlatformState({
+    required this.timeBootMs,
+    required this.x,
+    required this.y,
+    required this.z,
+    required this.roll,
+    required this.pitch,
+    required this.yaw,
+    required this.velX,
+    required this.velY,
+    required this.velZ,
+    required this.velRoll,
+    required this.velPitch,
+    required this.velYaw,
+    required this.accX,
+    required this.accY,
+    required this.accZ,
+    required this.accRoll,
+    required this.accPitch,
+    required this.accYaw,
+    required this.health,
+    required this.mode,
   });
 
-  CubepilotFirmwareUpdateResp copyWith({
-    uint32_t? offset,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
+  MotionPlatformState copyWith({
+    uint32_t? timeBootMs,
+    float? x,
+    float? y,
+    float? z,
+    float? roll,
+    float? pitch,
+    float? yaw,
+    float? velX,
+    float? velY,
+    float? velZ,
+    float? velRoll,
+    float? velPitch,
+    float? velYaw,
+    float? accX,
+    float? accY,
+    float? accZ,
+    float? accRoll,
+    float? accPitch,
+    float? accYaw,
+    MotionPlatformHealth? health,
+    MotionPlatformMode? mode,
   }) {
-    return CubepilotFirmwareUpdateResp(
-      offset: offset ?? this.offset,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
+    return MotionPlatformState(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      x: x ?? this.x,
+      y: y ?? this.y,
+      z: z ?? this.z,
+      roll: roll ?? this.roll,
+      pitch: pitch ?? this.pitch,
+      yaw: yaw ?? this.yaw,
+      velX: velX ?? this.velX,
+      velY: velY ?? this.velY,
+      velZ: velZ ?? this.velZ,
+      velRoll: velRoll ?? this.velRoll,
+      velPitch: velPitch ?? this.velPitch,
+      velYaw: velYaw ?? this.velYaw,
+      accX: accX ?? this.accX,
+      accY: accY ?? this.accY,
+      accZ: accZ ?? this.accZ,
+      accRoll: accRoll ?? this.accRoll,
+      accPitch: accPitch ?? this.accPitch,
+      accYaw: accYaw ?? this.accYaw,
+      health: health ?? this.health,
+      mode: mode ?? this.mode,
     );
   }
 
-  factory CubepilotFirmwareUpdateResp.parse(ByteData data_) {
-    if (data_.lengthInBytes <
-        CubepilotFirmwareUpdateResp.mavlinkEncodedLength) {
-      var len = CubepilotFirmwareUpdateResp.mavlinkEncodedLength -
-          data_.lengthInBytes;
+  factory MotionPlatformState.parse(ByteData data_) {
+    if (data_.lengthInBytes < MotionPlatformState.mavlinkEncodedLength) {
+      var len = MotionPlatformState.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var offset = data_.getUint32(0, Endian.little);
-    var targetSystem = data_.getUint8(4);
-    var targetComponent = data_.getUint8(5);
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var x = data_.getFloat32(4, Endian.little);
+    var y = data_.getFloat32(8, Endian.little);
+    var z = data_.getFloat32(12, Endian.little);
+    var roll = data_.getFloat32(16, Endian.little);
+    var pitch = data_.getFloat32(20, Endian.little);
+    var yaw = data_.getFloat32(24, Endian.little);
+    var velX = data_.getFloat32(28, Endian.little);
+    var velY = data_.getFloat32(32, Endian.little);
+    var velZ = data_.getFloat32(36, Endian.little);
+    var velRoll = data_.getFloat32(40, Endian.little);
+    var velPitch = data_.getFloat32(44, Endian.little);
+    var velYaw = data_.getFloat32(48, Endian.little);
+    var accX = data_.getFloat32(52, Endian.little);
+    var accY = data_.getFloat32(56, Endian.little);
+    var accZ = data_.getFloat32(60, Endian.little);
+    var accRoll = data_.getFloat32(64, Endian.little);
+    var accPitch = data_.getFloat32(68, Endian.little);
+    var accYaw = data_.getFloat32(72, Endian.little);
+    var health = data_.getUint8(76);
+    var mode = data_.getUint8(77);
 
-    return CubepilotFirmwareUpdateResp(
-        offset: offset,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent);
+    return MotionPlatformState(
+        timeBootMs: timeBootMs,
+        x: x,
+        y: y,
+        z: z,
+        roll: roll,
+        pitch: pitch,
+        yaw: yaw,
+        velX: velX,
+        velY: velY,
+        velZ: velZ,
+        velRoll: velRoll,
+        velPitch: velPitch,
+        velYaw: velYaw,
+        accX: accX,
+        accY: accY,
+        accZ: accZ,
+        accRoll: accRoll,
+        accPitch: accPitch,
+        accYaw: accYaw,
+        health: health,
+        mode: mode);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, offset, Endian.little);
-    data_.setUint8(4, targetSystem);
-    data_.setUint8(5, targetComponent);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, x, Endian.little);
+    data_.setFloat32(8, y, Endian.little);
+    data_.setFloat32(12, z, Endian.little);
+    data_.setFloat32(16, roll, Endian.little);
+    data_.setFloat32(20, pitch, Endian.little);
+    data_.setFloat32(24, yaw, Endian.little);
+    data_.setFloat32(28, velX, Endian.little);
+    data_.setFloat32(32, velY, Endian.little);
+    data_.setFloat32(36, velZ, Endian.little);
+    data_.setFloat32(40, velRoll, Endian.little);
+    data_.setFloat32(44, velPitch, Endian.little);
+    data_.setFloat32(48, velYaw, Endian.little);
+    data_.setFloat32(52, accX, Endian.little);
+    data_.setFloat32(56, accY, Endian.little);
+    data_.setFloat32(60, accZ, Endian.little);
+    data_.setFloat32(64, accRoll, Endian.little);
+    data_.setFloat32(68, accPitch, Endian.little);
+    data_.setFloat32(72, accYaw, Endian.little);
+    data_.setUint8(76, health);
+    data_.setUint8(77, mode);
     return data_;
   }
 }
 
-class MavlinkDialectCubepilot implements MavlinkDialect {
+/// State report specific for eMotion Motion System by Bosch Rexroth B.V. Values applicable to motion platforms in general are sent in MOTION_PLATFORM_STATE with the same timestamp. Actuators are numbered in a clockwise direction when looking from above, starting from the front right. Actuator position is 0 when actuator is in mid-stroke.
+///
+/// REXROTH_MOTION_PLATFORM
+class RexrothMotionPlatform implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52503;
+
+  static const int _mavlinkCrcExtra = 96;
+
+  static const int mavlinkEncodedLength = 85;
+
+  @override
+  int get mavlinkMessageId => _mavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// units: ms
+  ///
+  /// time_boot_ms
+  final uint32_t timeBootMs;
+
+  /// Number of message as sent by the Motion System.
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// frame_count
+  final uint32_t frameCount;
+
+  /// Motion Status variable as sent by the system.
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// motion_status
+  final uint32_t motionStatus;
+
+  /// Current actuator 1 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator1
+  final float actuator1;
+
+  /// Current actuator 2 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator2
+  final float actuator2;
+
+  /// Current actuator 3 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator3
+  final float actuator3;
+
+  /// Current actuator 4 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator4
+  final float actuator4;
+
+  /// Current actuator 5 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator5
+  final float actuator5;
+
+  /// Current actuator 6 position.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// actuator6
+  final float actuator6;
+
+  /// X axis (surge) platform setpoint, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_x
+  final float platformSetpointX;
+
+  /// Y axis (sway) platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_y
+  final float platformSetpointY;
+
+  /// Z axis (heave) platform setpoint, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// platform_setpoint_z
+  final float platformSetpointZ;
+
+  /// Roll platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_roll
+  final float platformSetpointRoll;
+
+  /// Pitch platform setpoint, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_pitch
+  final float platformSetpointPitch;
+
+  /// Yaw platform setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// platform_setpoint_yaw
+  final float platformSetpointYaw;
+
+  /// X axis (surge) special effect setpoint, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_x
+  final float effectSetpointX;
+
+  /// Y axis (sway) special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_y
+  final float effectSetpointY;
+
+  /// Z axis (heave) special effect setpoint, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// effect_setpoint_z
+  final float effectSetpointZ;
+
+  /// Roll special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_roll
+  final float effectSetpointRoll;
+
+  /// Pitch special effect setpoint, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_pitch
+  final float effectSetpointPitch;
+
+  /// Yaw special effect setpoint, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad
+  ///
+  /// effect_setpoint_yaw
+  final float effectSetpointYaw;
+
+  /// Error code extracted from motion status.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// error_code
+  final uint8_t errorCode;
+
+  RexrothMotionPlatform({
+    required this.timeBootMs,
+    required this.frameCount,
+    required this.motionStatus,
+    required this.actuator1,
+    required this.actuator2,
+    required this.actuator3,
+    required this.actuator4,
+    required this.actuator5,
+    required this.actuator6,
+    required this.platformSetpointX,
+    required this.platformSetpointY,
+    required this.platformSetpointZ,
+    required this.platformSetpointRoll,
+    required this.platformSetpointPitch,
+    required this.platformSetpointYaw,
+    required this.effectSetpointX,
+    required this.effectSetpointY,
+    required this.effectSetpointZ,
+    required this.effectSetpointRoll,
+    required this.effectSetpointPitch,
+    required this.effectSetpointYaw,
+    required this.errorCode,
+  });
+
+  RexrothMotionPlatform copyWith({
+    uint32_t? timeBootMs,
+    uint32_t? frameCount,
+    uint32_t? motionStatus,
+    float? actuator1,
+    float? actuator2,
+    float? actuator3,
+    float? actuator4,
+    float? actuator5,
+    float? actuator6,
+    float? platformSetpointX,
+    float? platformSetpointY,
+    float? platformSetpointZ,
+    float? platformSetpointRoll,
+    float? platformSetpointPitch,
+    float? platformSetpointYaw,
+    float? effectSetpointX,
+    float? effectSetpointY,
+    float? effectSetpointZ,
+    float? effectSetpointRoll,
+    float? effectSetpointPitch,
+    float? effectSetpointYaw,
+    uint8_t? errorCode,
+  }) {
+    return RexrothMotionPlatform(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      frameCount: frameCount ?? this.frameCount,
+      motionStatus: motionStatus ?? this.motionStatus,
+      actuator1: actuator1 ?? this.actuator1,
+      actuator2: actuator2 ?? this.actuator2,
+      actuator3: actuator3 ?? this.actuator3,
+      actuator4: actuator4 ?? this.actuator4,
+      actuator5: actuator5 ?? this.actuator5,
+      actuator6: actuator6 ?? this.actuator6,
+      platformSetpointX: platformSetpointX ?? this.platformSetpointX,
+      platformSetpointY: platformSetpointY ?? this.platformSetpointY,
+      platformSetpointZ: platformSetpointZ ?? this.platformSetpointZ,
+      platformSetpointRoll: platformSetpointRoll ?? this.platformSetpointRoll,
+      platformSetpointPitch:
+          platformSetpointPitch ?? this.platformSetpointPitch,
+      platformSetpointYaw: platformSetpointYaw ?? this.platformSetpointYaw,
+      effectSetpointX: effectSetpointX ?? this.effectSetpointX,
+      effectSetpointY: effectSetpointY ?? this.effectSetpointY,
+      effectSetpointZ: effectSetpointZ ?? this.effectSetpointZ,
+      effectSetpointRoll: effectSetpointRoll ?? this.effectSetpointRoll,
+      effectSetpointPitch: effectSetpointPitch ?? this.effectSetpointPitch,
+      effectSetpointYaw: effectSetpointYaw ?? this.effectSetpointYaw,
+      errorCode: errorCode ?? this.errorCode,
+    );
+  }
+
+  factory RexrothMotionPlatform.parse(ByteData data_) {
+    if (data_.lengthInBytes < RexrothMotionPlatform.mavlinkEncodedLength) {
+      var len =
+          RexrothMotionPlatform.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var frameCount = data_.getUint32(4, Endian.little);
+    var motionStatus = data_.getUint32(8, Endian.little);
+    var actuator1 = data_.getFloat32(12, Endian.little);
+    var actuator2 = data_.getFloat32(16, Endian.little);
+    var actuator3 = data_.getFloat32(20, Endian.little);
+    var actuator4 = data_.getFloat32(24, Endian.little);
+    var actuator5 = data_.getFloat32(28, Endian.little);
+    var actuator6 = data_.getFloat32(32, Endian.little);
+    var platformSetpointX = data_.getFloat32(36, Endian.little);
+    var platformSetpointY = data_.getFloat32(40, Endian.little);
+    var platformSetpointZ = data_.getFloat32(44, Endian.little);
+    var platformSetpointRoll = data_.getFloat32(48, Endian.little);
+    var platformSetpointPitch = data_.getFloat32(52, Endian.little);
+    var platformSetpointYaw = data_.getFloat32(56, Endian.little);
+    var effectSetpointX = data_.getFloat32(60, Endian.little);
+    var effectSetpointY = data_.getFloat32(64, Endian.little);
+    var effectSetpointZ = data_.getFloat32(68, Endian.little);
+    var effectSetpointRoll = data_.getFloat32(72, Endian.little);
+    var effectSetpointPitch = data_.getFloat32(76, Endian.little);
+    var effectSetpointYaw = data_.getFloat32(80, Endian.little);
+    var errorCode = data_.getUint8(84);
+
+    return RexrothMotionPlatform(
+        timeBootMs: timeBootMs,
+        frameCount: frameCount,
+        motionStatus: motionStatus,
+        actuator1: actuator1,
+        actuator2: actuator2,
+        actuator3: actuator3,
+        actuator4: actuator4,
+        actuator5: actuator5,
+        actuator6: actuator6,
+        platformSetpointX: platformSetpointX,
+        platformSetpointY: platformSetpointY,
+        platformSetpointZ: platformSetpointZ,
+        platformSetpointRoll: platformSetpointRoll,
+        platformSetpointPitch: platformSetpointPitch,
+        platformSetpointYaw: platformSetpointYaw,
+        effectSetpointX: effectSetpointX,
+        effectSetpointY: effectSetpointY,
+        effectSetpointZ: effectSetpointZ,
+        effectSetpointRoll: effectSetpointRoll,
+        effectSetpointPitch: effectSetpointPitch,
+        effectSetpointYaw: effectSetpointYaw,
+        errorCode: errorCode);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setUint32(4, frameCount, Endian.little);
+    data_.setUint32(8, motionStatus, Endian.little);
+    data_.setFloat32(12, actuator1, Endian.little);
+    data_.setFloat32(16, actuator2, Endian.little);
+    data_.setFloat32(20, actuator3, Endian.little);
+    data_.setFloat32(24, actuator4, Endian.little);
+    data_.setFloat32(28, actuator5, Endian.little);
+    data_.setFloat32(32, actuator6, Endian.little);
+    data_.setFloat32(36, platformSetpointX, Endian.little);
+    data_.setFloat32(40, platformSetpointY, Endian.little);
+    data_.setFloat32(44, platformSetpointZ, Endian.little);
+    data_.setFloat32(48, platformSetpointRoll, Endian.little);
+    data_.setFloat32(52, platformSetpointPitch, Endian.little);
+    data_.setFloat32(56, platformSetpointYaw, Endian.little);
+    data_.setFloat32(60, effectSetpointX, Endian.little);
+    data_.setFloat32(64, effectSetpointY, Endian.little);
+    data_.setFloat32(68, effectSetpointZ, Endian.little);
+    data_.setFloat32(72, effectSetpointRoll, Endian.little);
+    data_.setFloat32(76, effectSetpointPitch, Endian.little);
+    data_.setFloat32(80, effectSetpointYaw, Endian.little);
+    data_.setUint8(84, errorCode);
+    return data_;
+  }
+}
+
+/// These values are an extra cue that should be added to accelerations and rotations etc. resulting from aircraft state, with the resulting cue being the sum of the latest aircraft and extra values. An example use case would be a cockpit shaker.
+///
+/// MOTION_CUE_EXTRA
+class MotionCueExtra implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52504;
+
+  static const int _mavlinkCrcExtra = 177;
+
+  static const int mavlinkEncodedLength = 28;
+
+  @override
+  int get mavlinkMessageId => _mavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint32_t
+  ///
+  /// units: ms
+  ///
+  /// time_boot_ms
+  final uint32_t timeBootMs;
+
+  /// Roll velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_roll
+  final float velRoll;
+
+  /// Pitch velocity, positive nose up.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_pitch
+  final float velPitch;
+
+  /// Yaw velocity, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rad/s
+  ///
+  /// vel_yaw
+  final float velYaw;
+
+  /// X axis (surge) acceleration, positive forward.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_x
+  final float accX;
+
+  /// Y axis (sway) acceleration, positive right.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_y
+  final float accY;
+
+  /// Z axis (heave) acceleration, positive down.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m/s/s
+  ///
+  /// acc_z
+  final float accZ;
+
+  MotionCueExtra({
+    required this.timeBootMs,
+    required this.velRoll,
+    required this.velPitch,
+    required this.velYaw,
+    required this.accX,
+    required this.accY,
+    required this.accZ,
+  });
+
+  MotionCueExtra copyWith({
+    uint32_t? timeBootMs,
+    float? velRoll,
+    float? velPitch,
+    float? velYaw,
+    float? accX,
+    float? accY,
+    float? accZ,
+  }) {
+    return MotionCueExtra(
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+      velRoll: velRoll ?? this.velRoll,
+      velPitch: velPitch ?? this.velPitch,
+      velYaw: velYaw ?? this.velYaw,
+      accX: accX ?? this.accX,
+      accY: accY ?? this.accY,
+      accZ: accZ ?? this.accZ,
+    );
+  }
+
+  factory MotionCueExtra.parse(ByteData data_) {
+    if (data_.lengthInBytes < MotionCueExtra.mavlinkEncodedLength) {
+      var len = MotionCueExtra.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var timeBootMs = data_.getUint32(0, Endian.little);
+    var velRoll = data_.getFloat32(4, Endian.little);
+    var velPitch = data_.getFloat32(8, Endian.little);
+    var velYaw = data_.getFloat32(12, Endian.little);
+    var accX = data_.getFloat32(16, Endian.little);
+    var accY = data_.getFloat32(20, Endian.little);
+    var accZ = data_.getFloat32(24, Endian.little);
+
+    return MotionCueExtra(
+        timeBootMs: timeBootMs,
+        velRoll: velRoll,
+        velPitch: velPitch,
+        velYaw: velYaw,
+        accX: accX,
+        accY: accY,
+        accZ: accZ);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint32(0, timeBootMs, Endian.little);
+    data_.setFloat32(4, velRoll, Endian.little);
+    data_.setFloat32(8, velPitch, Endian.little);
+    data_.setFloat32(12, velYaw, Endian.little);
+    data_.setFloat32(16, accX, Endian.little);
+    data_.setFloat32(20, accY, Endian.little);
+    data_.setFloat32(24, accZ, Endian.little);
+    return data_;
+  }
+}
+
+/// Data for tracking of pilot eye gaze. This is the primary message for MARSH_TYPE_EYE_TRACKER.
+///
+/// EYE_TRACKING_DATA
+class EyeTrackingData implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52505;
+
+  static const int _mavlinkCrcExtra = 215;
+
+  static const int mavlinkEncodedLength = 50;
+
+  @override
+  int get mavlinkMessageId => _mavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Timestamp (time since system boot).
+  ///
+  /// MAVLink type: uint64_t
+  ///
+  /// units: us
+  ///
+  /// time_usec
+  final uint64_t timeUsec;
+
+  /// X axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_x
+  final float gazeOriginX;
+
+  /// Y axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_y
+  final float gazeOriginY;
+
+  /// Z axis of gaze origin point, NaN if unknown. The reference system depends on specific application.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: m
+  ///
+  /// gaze_origin_z
+  final float gazeOriginZ;
+
+  /// X axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_x
+  final float gazeDirectionX;
+
+  /// Y axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_y
+  final float gazeDirectionY;
+
+  /// Z axis of gaze direction vector, expected to be normalized to unit magnitude, NaN if unknown. The reference system should match origin point.
+  ///
+  /// MAVLink type: float
+  ///
+  /// gaze_direction_z
+  final float gazeDirectionZ;
+
+  /// Gaze focal point on video feed x value (normalized 0..1, 0 is left, 1 is right), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// video_gaze_x
+  final float videoGazeX;
+
+  /// Gaze focal point on video feed y value (normalized 0..1, 0 is top, 1 is bottom), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// video_gaze_y
+  final float videoGazeY;
+
+  /// Gaze focal point on surface x value (normalized 0..1, 0 is left, 1 is right), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// surface_gaze_x
+  final float surfaceGazeX;
+
+  /// Gaze focal point on surface y value (normalized 0..1, 0 is top, 1 is bottom), NaN if unknown
+  ///
+  /// MAVLink type: float
+  ///
+  /// surface_gaze_y
+  final float surfaceGazeY;
+
+  /// Sensor ID, used for identifying the device and/or person tracked. Set to zero if unknown/unused.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// sensor_id
+  final uint8_t sensorId;
+
+  /// Identifier of surface for 2D gaze point, or an identified region when surface point is invalid. Set to zero if unknown/unused.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// surface_id
+  final uint8_t surfaceId;
+
+  EyeTrackingData({
+    required this.timeUsec,
+    required this.gazeOriginX,
+    required this.gazeOriginY,
+    required this.gazeOriginZ,
+    required this.gazeDirectionX,
+    required this.gazeDirectionY,
+    required this.gazeDirectionZ,
+    required this.videoGazeX,
+    required this.videoGazeY,
+    required this.surfaceGazeX,
+    required this.surfaceGazeY,
+    required this.sensorId,
+    required this.surfaceId,
+  });
+
+  EyeTrackingData copyWith({
+    uint64_t? timeUsec,
+    float? gazeOriginX,
+    float? gazeOriginY,
+    float? gazeOriginZ,
+    float? gazeDirectionX,
+    float? gazeDirectionY,
+    float? gazeDirectionZ,
+    float? videoGazeX,
+    float? videoGazeY,
+    float? surfaceGazeX,
+    float? surfaceGazeY,
+    uint8_t? sensorId,
+    uint8_t? surfaceId,
+  }) {
+    return EyeTrackingData(
+      timeUsec: timeUsec ?? this.timeUsec,
+      gazeOriginX: gazeOriginX ?? this.gazeOriginX,
+      gazeOriginY: gazeOriginY ?? this.gazeOriginY,
+      gazeOriginZ: gazeOriginZ ?? this.gazeOriginZ,
+      gazeDirectionX: gazeDirectionX ?? this.gazeDirectionX,
+      gazeDirectionY: gazeDirectionY ?? this.gazeDirectionY,
+      gazeDirectionZ: gazeDirectionZ ?? this.gazeDirectionZ,
+      videoGazeX: videoGazeX ?? this.videoGazeX,
+      videoGazeY: videoGazeY ?? this.videoGazeY,
+      surfaceGazeX: surfaceGazeX ?? this.surfaceGazeX,
+      surfaceGazeY: surfaceGazeY ?? this.surfaceGazeY,
+      sensorId: sensorId ?? this.sensorId,
+      surfaceId: surfaceId ?? this.surfaceId,
+    );
+  }
+
+  factory EyeTrackingData.parse(ByteData data_) {
+    if (data_.lengthInBytes < EyeTrackingData.mavlinkEncodedLength) {
+      var len = EyeTrackingData.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var timeUsec = data_.getUint64(0, Endian.little);
+    var gazeOriginX = data_.getFloat32(8, Endian.little);
+    var gazeOriginY = data_.getFloat32(12, Endian.little);
+    var gazeOriginZ = data_.getFloat32(16, Endian.little);
+    var gazeDirectionX = data_.getFloat32(20, Endian.little);
+    var gazeDirectionY = data_.getFloat32(24, Endian.little);
+    var gazeDirectionZ = data_.getFloat32(28, Endian.little);
+    var videoGazeX = data_.getFloat32(32, Endian.little);
+    var videoGazeY = data_.getFloat32(36, Endian.little);
+    var surfaceGazeX = data_.getFloat32(40, Endian.little);
+    var surfaceGazeY = data_.getFloat32(44, Endian.little);
+    var sensorId = data_.getUint8(48);
+    var surfaceId = data_.getUint8(49);
+
+    return EyeTrackingData(
+        timeUsec: timeUsec,
+        gazeOriginX: gazeOriginX,
+        gazeOriginY: gazeOriginY,
+        gazeOriginZ: gazeOriginZ,
+        gazeDirectionX: gazeDirectionX,
+        gazeDirectionY: gazeDirectionY,
+        gazeDirectionZ: gazeDirectionZ,
+        videoGazeX: videoGazeX,
+        videoGazeY: videoGazeY,
+        surfaceGazeX: surfaceGazeX,
+        surfaceGazeY: surfaceGazeY,
+        sensorId: sensorId,
+        surfaceId: surfaceId);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint64(0, timeUsec, Endian.little);
+    data_.setFloat32(8, gazeOriginX, Endian.little);
+    data_.setFloat32(12, gazeOriginY, Endian.little);
+    data_.setFloat32(16, gazeOriginZ, Endian.little);
+    data_.setFloat32(20, gazeDirectionX, Endian.little);
+    data_.setFloat32(24, gazeDirectionY, Endian.little);
+    data_.setFloat32(28, gazeDirectionZ, Endian.little);
+    data_.setFloat32(32, videoGazeX, Endian.little);
+    data_.setFloat32(36, videoGazeY, Endian.little);
+    data_.setFloat32(40, surfaceGazeX, Endian.little);
+    data_.setFloat32(44, surfaceGazeY, Endian.little);
+    data_.setUint8(48, sensorId);
+    data_.setUint8(49, surfaceId);
+    return data_;
+  }
+}
+
+class MavlinkDialectMarsh implements MavlinkDialect {
   static const int mavlinkVersion = 3;
 
   @override
@@ -47730,16 +48589,16 @@ class MavlinkDialectCubepilot implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.parse(data);
       case 12920:
         return HygrometerSensor.parse(data);
-      case 50001:
-        return CubepilotRawRc.parse(data);
-      case 50002:
-        return HerelinkVideoStreamInformation.parse(data);
-      case 50003:
-        return HerelinkTelem.parse(data);
-      case 50004:
-        return CubepilotFirmwareUpdateStart.parse(data);
-      case 50005:
-        return CubepilotFirmwareUpdateResp.parse(data);
+      case 52501:
+        return ControlLoadingAxis.parse(data);
+      case 52502:
+        return MotionPlatformState.parse(data);
+      case 52503:
+        return RexrothMotionPlatform.parse(data);
+      case 52504:
+        return MotionCueExtra.parse(data);
+      case 52505:
+        return EyeTrackingData.parse(data);
       default:
         return null;
     }
@@ -48216,16 +49075,16 @@ class MavlinkDialectCubepilot implements MavlinkDialect {
         return OpenDroneIdSystemUpdate._mavlinkCrcExtra;
       case 12920:
         return HygrometerSensor._mavlinkCrcExtra;
-      case 50001:
-        return CubepilotRawRc._mavlinkCrcExtra;
-      case 50002:
-        return HerelinkVideoStreamInformation._mavlinkCrcExtra;
-      case 50003:
-        return HerelinkTelem._mavlinkCrcExtra;
-      case 50004:
-        return CubepilotFirmwareUpdateStart._mavlinkCrcExtra;
-      case 50005:
-        return CubepilotFirmwareUpdateResp._mavlinkCrcExtra;
+      case 52501:
+        return ControlLoadingAxis._mavlinkCrcExtra;
+      case 52502:
+        return MotionPlatformState._mavlinkCrcExtra;
+      case 52503:
+        return RexrothMotionPlatform._mavlinkCrcExtra;
+      case 52504:
+        return MotionCueExtra._mavlinkCrcExtra;
+      case 52505:
+        return EyeTrackingData._mavlinkCrcExtra;
       default:
         return -1;
     }

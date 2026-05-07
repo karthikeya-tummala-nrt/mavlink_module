@@ -1222,177 +1222,14 @@ const MavComponent mavCompIdIlluminator = 243;
     "Replaced by [MAV_COMP_ID_ALL] since 2018-11. System control does not require a separate component ID. Instead, system commands should be sent with target_component=MAV_COMP_ID_ALL allowing the target component to use any appropriate component id.")
 const MavComponent mavCompIdSystemControl = 250;
 
-/// Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive).
 ///
-/// MAV_BOOL
-typedef MavBool = int;
+/// MAV_CMD
+typedef MavCmd = int;
 
-/// False.
+/// Set Loweheiser desired states
 ///
-/// MAV_BOOL_FALSE
-const MavBool mavBoolFalse = 0;
-
-/// True.
-///
-/// MAV_BOOL_TRUE
-const MavBool mavBoolTrue = 1;
-
-/// Bitmask of (optional) autopilot capabilities (64 bit). If a bit is set, the autopilot supports this capability.
-///
-/// MAV_PROTOCOL_CAPABILITY
-typedef MavProtocolCapability = int;
-
-/// Autopilot supports the MISSION_ITEM float message type.
-/// Note that MISSION_ITEM is deprecated, and autopilots should use MISSION_ITEM_INT instead.
-///
-///
-/// MAV_PROTOCOL_CAPABILITY_MISSION_FLOAT
-const MavProtocolCapability mavProtocolCapabilityMissionFloat = 1;
-
-/// Autopilot supports the new param float message type.
-///
-/// MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT
-@Deprecated(
-    "Replaced by [MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST] since 2022-03. ")
-const MavProtocolCapability mavProtocolCapabilityParamFloat = 2;
-
-/// Autopilot supports MISSION_ITEM_INT scaled integer message type.
-/// Note that this flag must always be set if missions are supported, because missions must always use MISSION_ITEM_INT (rather than MISSION_ITEM, which is deprecated).
-///
-///
-/// MAV_PROTOCOL_CAPABILITY_MISSION_INT
-const MavProtocolCapability mavProtocolCapabilityMissionInt = 4;
-
-/// Autopilot supports COMMAND_INT scaled integer message type.
-///
-/// MAV_PROTOCOL_CAPABILITY_COMMAND_INT
-const MavProtocolCapability mavProtocolCapabilityCommandInt = 8;
-
-/// Parameter protocol uses byte-wise encoding of parameter values into param_value (float) fields: https://mavlink.io/en/services/parameter.html#parameter-encoding.
-/// Note that either this flag or MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST should be set if the parameter protocol is supported.
-///
-///
-/// MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_BYTEWISE
-const MavProtocolCapability mavProtocolCapabilityParamEncodeBytewise = 16;
-
-/// Autopilot supports the File Transfer Protocol v1: https://mavlink.io/en/services/ftp.html.
-///
-/// MAV_PROTOCOL_CAPABILITY_FTP
-const MavProtocolCapability mavProtocolCapabilityFtp = 32;
-
-/// Autopilot supports commanding attitude offboard.
-///
-/// MAV_PROTOCOL_CAPABILITY_SET_ATTITUDE_TARGET
-const MavProtocolCapability mavProtocolCapabilitySetAttitudeTarget = 64;
-
-/// Autopilot supports commanding position and velocity targets in local NED frame.
-///
-/// MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_LOCAL_NED
-const MavProtocolCapability mavProtocolCapabilitySetPositionTargetLocalNed =
-    128;
-
-/// Autopilot supports commanding position and velocity targets in global scaled integers.
-///
-/// MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_GLOBAL_INT
-const MavProtocolCapability mavProtocolCapabilitySetPositionTargetGlobalInt =
-    256;
-
-/// Autopilot supports terrain protocol / data handling.
-///
-/// MAV_PROTOCOL_CAPABILITY_TERRAIN
-const MavProtocolCapability mavProtocolCapabilityTerrain = 512;
-
-/// Reserved for future use.
-///
-/// MAV_PROTOCOL_CAPABILITY_RESERVED3
-const MavProtocolCapability mavProtocolCapabilityReserved3 = 1024;
-
-/// Autopilot supports the MAV_CMD_DO_FLIGHTTERMINATION command (flight termination).
-///
-/// MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION
-const MavProtocolCapability mavProtocolCapabilityFlightTermination = 2048;
-
-/// Autopilot supports onboard compass calibration.
-///
-/// MAV_PROTOCOL_CAPABILITY_COMPASS_CALIBRATION
-const MavProtocolCapability mavProtocolCapabilityCompassCalibration = 4096;
-
-/// Autopilot supports MAVLink version 2.
-///
-/// MAV_PROTOCOL_CAPABILITY_MAVLINK2
-const MavProtocolCapability mavProtocolCapabilityMavlink2 = 8192;
-
-/// Autopilot supports mission fence protocol.
-///
-/// MAV_PROTOCOL_CAPABILITY_MISSION_FENCE
-const MavProtocolCapability mavProtocolCapabilityMissionFence = 16384;
-
-/// Autopilot supports mission rally point protocol.
-///
-/// MAV_PROTOCOL_CAPABILITY_MISSION_RALLY
-const MavProtocolCapability mavProtocolCapabilityMissionRally = 32768;
-
-/// Reserved for future use.
-///
-/// MAV_PROTOCOL_CAPABILITY_RESERVED2
-const MavProtocolCapability mavProtocolCapabilityReserved2 = 65536;
-
-/// Parameter protocol uses C-cast of parameter values to set the param_value (float) fields: https://mavlink.io/en/services/parameter.html#parameter-encoding.
-/// Note that either this flag or MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_BYTEWISE should be set if the parameter protocol is supported.
-///
-///
-/// MAV_PROTOCOL_CAPABILITY_PARAM_ENCODE_C_CAST
-const MavProtocolCapability mavProtocolCapabilityParamEncodeCCast = 131072;
-
-/// This component implements/is a gimbal manager. This means the GIMBAL_MANAGER_INFORMATION, and other messages can be requested.
-///
-///
-/// MAV_PROTOCOL_CAPABILITY_COMPONENT_IMPLEMENTS_GIMBAL_MANAGER
-const MavProtocolCapability
-    mavProtocolCapabilityComponentImplementsGimbalManager = 262144;
-
-/// WIP.
-/// Component supports locking control to a particular GCS independent of its system (via MAV_CMD_REQUEST_OPERATOR_CONTROL).
-///
-/// MAV_PROTOCOL_CAPABILITY_COMPONENT_ACCEPTS_GCS_CONTROL
-const MavProtocolCapability mavProtocolCapabilityComponentAcceptsGcsControl =
-    524288;
-
-/// WIP.
-/// Autopilot has a connected gripper. MAVLink Grippers would set MAV_TYPE_GRIPPER instead.
-///
-/// MAV_PROTOCOL_CAPABILITY_GRIPPER
-const MavProtocolCapability mavProtocolCapabilityGripper = 1048576;
-
-/// These values define the type of firmware release.  These values indicate the first version or release of this type.  For example the first alpha release would be 64, the second would be 65.
-///
-/// FIRMWARE_VERSION_TYPE
-typedef FirmwareVersionType = int;
-
-/// development release
-///
-/// FIRMWARE_VERSION_TYPE_DEV
-const FirmwareVersionType firmwareVersionTypeDev = 0;
-
-/// alpha release
-///
-/// FIRMWARE_VERSION_TYPE_ALPHA
-const FirmwareVersionType firmwareVersionTypeAlpha = 64;
-
-/// beta release
-///
-/// FIRMWARE_VERSION_TYPE_BETA
-const FirmwareVersionType firmwareVersionTypeBeta = 128;
-
-/// release candidate
-///
-/// FIRMWARE_VERSION_TYPE_RC
-const FirmwareVersionType firmwareVersionTypeRc = 192;
-
-/// official stable release
-///
-/// FIRMWARE_VERSION_TYPE_OFFICIAL
-const FirmwareVersionType firmwareVersionTypeOfficial = 255;
+/// MAV_CMD_LOWEHEISER_SET_STATE
+const MavCmd mavCmdLoweheiserSetState = 10151;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
@@ -1523,15 +1360,15 @@ class Heartbeat implements MavlinkMessage {
   }
 }
 
-/// The filtered global position (e.g. fused GPS and accelerometers). The position is in GPS-frame (right-handed, Z-up). It is designed as scaled integer message since the resolution of float is not sufficient.
+/// Composite EFI and Governor data from Loweheiser equipment.  This message is created by the EFI unit based on its own data and data received from a governor attached to that EFI unit.
 ///
-/// GLOBAL_POSITION_INT
-class GlobalPositionInt implements MavlinkMessage {
-  static const int _mavlinkMessageId = 33;
+/// LOWEHEISER_GOV_EFI
+class LoweheiserGovEfi implements MavlinkMessage {
+  static const int _mavlinkMessageId = 10151;
 
-  static const int _mavlinkCrcExtra = 104;
+  static const int _mavlinkCrcExtra = 195;
 
-  static const int mavlinkEncodedLength = 28;
+  static const int mavlinkEncodedLength = 85;
 
   @override
   int get mavlinkMessageId => _mavlinkMessageId;
@@ -1539,375 +1376,372 @@ class GlobalPositionInt implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// Timestamp (time since system boot).
+  /// Generator Battery voltage.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: V
+  ///
+  /// volt_batt
+  final float voltBatt;
+
+  /// Generator Battery current.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_batt
+  final float currBatt;
+
+  /// Current being produced by generator.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_gen
+  final float currGen;
+
+  /// Load current being consumed by the UAV (sum of curr_gen and curr_batt)
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: A
+  ///
+  /// curr_rot
+  final float currRot;
+
+  /// Generator fuel remaining in litres.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: l
+  ///
+  /// fuel_level
+  final float fuelLevel;
+
+  /// Throttle Output.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: %
+  ///
+  /// throttle
+  final float throttle;
+
+  /// Seconds this generator has run since it was rebooted.
   ///
   /// MAVLink type: uint32_t
+  ///
+  /// units: s
+  ///
+  /// runtime
+  final uint32_t runtime;
+
+  /// Seconds until this generator requires maintenance.  A negative value indicates maintenance is past due.
+  ///
+  /// MAVLink type: int32_t
+  ///
+  /// units: s
+  ///
+  /// until_maintenance
+  final int32_t untilMaintenance;
+
+  /// The Temperature of the rectifier.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// rectifier_temp
+  final float rectifierTemp;
+
+  /// The temperature of the mechanical motor, fuel cell core or generator.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: degC
+  ///
+  /// generator_temp
+  final float generatorTemp;
+
+  /// EFI Supply Voltage.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: V
+  ///
+  /// efi_batt
+  final float efiBatt;
+
+  /// Motor RPM.
+  ///
+  /// MAVLink type: float
+  ///
+  /// units: rpm
+  ///
+  /// efi_rpm
+  final float efiRpm;
+
+  /// Injector pulse-width in milliseconds.
+  ///
+  /// MAVLink type: float
   ///
   /// units: ms
   ///
-  /// time_boot_ms
-  final uint32_t timeBootMs;
+  /// efi_pw
+  final float efiPw;
 
-  /// Latitude, expressed
+  /// Fuel flow rate in litres/hour.
   ///
-  /// MAVLink type: int32_t
+  /// MAVLink type: float
   ///
-  /// units: degE7
-  ///
-  /// lat
-  final int32_t lat;
+  /// efi_fuel_flow
+  final float efiFuelFlow;
 
-  /// Longitude, expressed
+  /// Fuel consumed.
   ///
-  /// MAVLink type: int32_t
+  /// MAVLink type: float
   ///
-  /// units: degE7
+  /// units: l
   ///
-  /// lon
-  final int32_t lon;
+  /// efi_fuel_consumed
+  final float efiFuelConsumed;
 
-  /// Altitude (MSL). Note that virtually all GPS modules provide both WGS84 and MSL.
+  /// Atmospheric pressure.
   ///
-  /// MAVLink type: int32_t
+  /// MAVLink type: float
   ///
-  /// units: mm
+  /// units: kPa
   ///
-  /// alt
-  final int32_t alt;
+  /// efi_baro
+  final float efiBaro;
 
-  /// Altitude above home
+  /// Manifold Air Temperature.
   ///
-  /// MAVLink type: int32_t
+  /// MAVLink type: float
   ///
-  /// units: mm
+  /// units: degC
   ///
-  /// relative_alt
-  final int32_t relativeAlt;
+  /// efi_mat
+  final float efiMat;
 
-  /// Ground X Speed (Latitude, positive north)
+  /// Cylinder Head Temperature.
   ///
-  /// MAVLink type: int16_t
+  /// MAVLink type: float
   ///
-  /// units: cm/s
+  /// units: degC
   ///
-  /// vx
-  final int16_t vx;
+  /// efi_clt
+  final float efiClt;
 
-  /// Ground Y Speed (Longitude, positive east)
+  /// Throttle Position.
   ///
-  /// MAVLink type: int16_t
+  /// MAVLink type: float
   ///
-  /// units: cm/s
+  /// units: %
   ///
-  /// vy
-  final int16_t vy;
+  /// efi_tps
+  final float efiTps;
 
-  /// Ground Z Speed (Altitude, positive down)
+  /// Exhaust gas temperature.
   ///
-  /// MAVLink type: int16_t
+  /// MAVLink type: float
   ///
-  /// units: cm/s
+  /// units: degC
   ///
-  /// vz
-  final int16_t vz;
+  /// efi_exhaust_gas_temperature
+  final float efiExhaustGasTemperature;
 
-  /// Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
+  /// Generator status.
   ///
   /// MAVLink type: uint16_t
   ///
-  /// units: cdeg
-  ///
-  /// hdg
-  final uint16_t hdg;
+  /// generator_status
+  final uint16_t generatorStatus;
 
-  GlobalPositionInt({
-    required this.timeBootMs,
-    required this.lat,
-    required this.lon,
-    required this.alt,
-    required this.relativeAlt,
-    required this.vx,
-    required this.vy,
-    required this.vz,
-    required this.hdg,
+  /// EFI status.
+  ///
+  /// MAVLink type: uint16_t
+  ///
+  /// efi_status
+  final uint16_t efiStatus;
+
+  /// EFI index.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// efi_index
+  final uint8_t efiIndex;
+
+  LoweheiserGovEfi({
+    required this.voltBatt,
+    required this.currBatt,
+    required this.currGen,
+    required this.currRot,
+    required this.fuelLevel,
+    required this.throttle,
+    required this.runtime,
+    required this.untilMaintenance,
+    required this.rectifierTemp,
+    required this.generatorTemp,
+    required this.efiBatt,
+    required this.efiRpm,
+    required this.efiPw,
+    required this.efiFuelFlow,
+    required this.efiFuelConsumed,
+    required this.efiBaro,
+    required this.efiMat,
+    required this.efiClt,
+    required this.efiTps,
+    required this.efiExhaustGasTemperature,
+    required this.generatorStatus,
+    required this.efiStatus,
+    required this.efiIndex,
   });
 
-  GlobalPositionInt copyWith({
-    uint32_t? timeBootMs,
-    int32_t? lat,
-    int32_t? lon,
-    int32_t? alt,
-    int32_t? relativeAlt,
-    int16_t? vx,
-    int16_t? vy,
-    int16_t? vz,
-    uint16_t? hdg,
+  LoweheiserGovEfi copyWith({
+    float? voltBatt,
+    float? currBatt,
+    float? currGen,
+    float? currRot,
+    float? fuelLevel,
+    float? throttle,
+    uint32_t? runtime,
+    int32_t? untilMaintenance,
+    float? rectifierTemp,
+    float? generatorTemp,
+    float? efiBatt,
+    float? efiRpm,
+    float? efiPw,
+    float? efiFuelFlow,
+    float? efiFuelConsumed,
+    float? efiBaro,
+    float? efiMat,
+    float? efiClt,
+    float? efiTps,
+    float? efiExhaustGasTemperature,
+    uint16_t? generatorStatus,
+    uint16_t? efiStatus,
+    uint8_t? efiIndex,
   }) {
-    return GlobalPositionInt(
-      timeBootMs: timeBootMs ?? this.timeBootMs,
-      lat: lat ?? this.lat,
-      lon: lon ?? this.lon,
-      alt: alt ?? this.alt,
-      relativeAlt: relativeAlt ?? this.relativeAlt,
-      vx: vx ?? this.vx,
-      vy: vy ?? this.vy,
-      vz: vz ?? this.vz,
-      hdg: hdg ?? this.hdg,
+    return LoweheiserGovEfi(
+      voltBatt: voltBatt ?? this.voltBatt,
+      currBatt: currBatt ?? this.currBatt,
+      currGen: currGen ?? this.currGen,
+      currRot: currRot ?? this.currRot,
+      fuelLevel: fuelLevel ?? this.fuelLevel,
+      throttle: throttle ?? this.throttle,
+      runtime: runtime ?? this.runtime,
+      untilMaintenance: untilMaintenance ?? this.untilMaintenance,
+      rectifierTemp: rectifierTemp ?? this.rectifierTemp,
+      generatorTemp: generatorTemp ?? this.generatorTemp,
+      efiBatt: efiBatt ?? this.efiBatt,
+      efiRpm: efiRpm ?? this.efiRpm,
+      efiPw: efiPw ?? this.efiPw,
+      efiFuelFlow: efiFuelFlow ?? this.efiFuelFlow,
+      efiFuelConsumed: efiFuelConsumed ?? this.efiFuelConsumed,
+      efiBaro: efiBaro ?? this.efiBaro,
+      efiMat: efiMat ?? this.efiMat,
+      efiClt: efiClt ?? this.efiClt,
+      efiTps: efiTps ?? this.efiTps,
+      efiExhaustGasTemperature:
+          efiExhaustGasTemperature ?? this.efiExhaustGasTemperature,
+      generatorStatus: generatorStatus ?? this.generatorStatus,
+      efiStatus: efiStatus ?? this.efiStatus,
+      efiIndex: efiIndex ?? this.efiIndex,
     );
   }
 
-  factory GlobalPositionInt.parse(ByteData data_) {
-    if (data_.lengthInBytes < GlobalPositionInt.mavlinkEncodedLength) {
-      var len = GlobalPositionInt.mavlinkEncodedLength - data_.lengthInBytes;
+  factory LoweheiserGovEfi.parse(ByteData data_) {
+    if (data_.lengthInBytes < LoweheiserGovEfi.mavlinkEncodedLength) {
+      var len = LoweheiserGovEfi.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var timeBootMs = data_.getUint32(0, Endian.little);
-    var lat = data_.getInt32(4, Endian.little);
-    var lon = data_.getInt32(8, Endian.little);
-    var alt = data_.getInt32(12, Endian.little);
-    var relativeAlt = data_.getInt32(16, Endian.little);
-    var vx = data_.getInt16(20, Endian.little);
-    var vy = data_.getInt16(22, Endian.little);
-    var vz = data_.getInt16(24, Endian.little);
-    var hdg = data_.getUint16(26, Endian.little);
+    var voltBatt = data_.getFloat32(0, Endian.little);
+    var currBatt = data_.getFloat32(4, Endian.little);
+    var currGen = data_.getFloat32(8, Endian.little);
+    var currRot = data_.getFloat32(12, Endian.little);
+    var fuelLevel = data_.getFloat32(16, Endian.little);
+    var throttle = data_.getFloat32(20, Endian.little);
+    var runtime = data_.getUint32(24, Endian.little);
+    var untilMaintenance = data_.getInt32(28, Endian.little);
+    var rectifierTemp = data_.getFloat32(32, Endian.little);
+    var generatorTemp = data_.getFloat32(36, Endian.little);
+    var efiBatt = data_.getFloat32(40, Endian.little);
+    var efiRpm = data_.getFloat32(44, Endian.little);
+    var efiPw = data_.getFloat32(48, Endian.little);
+    var efiFuelFlow = data_.getFloat32(52, Endian.little);
+    var efiFuelConsumed = data_.getFloat32(56, Endian.little);
+    var efiBaro = data_.getFloat32(60, Endian.little);
+    var efiMat = data_.getFloat32(64, Endian.little);
+    var efiClt = data_.getFloat32(68, Endian.little);
+    var efiTps = data_.getFloat32(72, Endian.little);
+    var efiExhaustGasTemperature = data_.getFloat32(76, Endian.little);
+    var generatorStatus = data_.getUint16(80, Endian.little);
+    var efiStatus = data_.getUint16(82, Endian.little);
+    var efiIndex = data_.getUint8(84);
 
-    return GlobalPositionInt(
-        timeBootMs: timeBootMs,
-        lat: lat,
-        lon: lon,
-        alt: alt,
-        relativeAlt: relativeAlt,
-        vx: vx,
-        vy: vy,
-        vz: vz,
-        hdg: hdg);
+    return LoweheiserGovEfi(
+        voltBatt: voltBatt,
+        currBatt: currBatt,
+        currGen: currGen,
+        currRot: currRot,
+        fuelLevel: fuelLevel,
+        throttle: throttle,
+        runtime: runtime,
+        untilMaintenance: untilMaintenance,
+        rectifierTemp: rectifierTemp,
+        generatorTemp: generatorTemp,
+        efiBatt: efiBatt,
+        efiRpm: efiRpm,
+        efiPw: efiPw,
+        efiFuelFlow: efiFuelFlow,
+        efiFuelConsumed: efiFuelConsumed,
+        efiBaro: efiBaro,
+        efiMat: efiMat,
+        efiClt: efiClt,
+        efiTps: efiTps,
+        efiExhaustGasTemperature: efiExhaustGasTemperature,
+        generatorStatus: generatorStatus,
+        efiStatus: efiStatus,
+        efiIndex: efiIndex);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, timeBootMs, Endian.little);
-    data_.setInt32(4, lat, Endian.little);
-    data_.setInt32(8, lon, Endian.little);
-    data_.setInt32(12, alt, Endian.little);
-    data_.setInt32(16, relativeAlt, Endian.little);
-    data_.setInt16(20, vx, Endian.little);
-    data_.setInt16(22, vy, Endian.little);
-    data_.setInt16(24, vz, Endian.little);
-    data_.setUint16(26, hdg, Endian.little);
+    data_.setFloat32(0, voltBatt, Endian.little);
+    data_.setFloat32(4, currBatt, Endian.little);
+    data_.setFloat32(8, currGen, Endian.little);
+    data_.setFloat32(12, currRot, Endian.little);
+    data_.setFloat32(16, fuelLevel, Endian.little);
+    data_.setFloat32(20, throttle, Endian.little);
+    data_.setUint32(24, runtime, Endian.little);
+    data_.setInt32(28, untilMaintenance, Endian.little);
+    data_.setFloat32(32, rectifierTemp, Endian.little);
+    data_.setFloat32(36, generatorTemp, Endian.little);
+    data_.setFloat32(40, efiBatt, Endian.little);
+    data_.setFloat32(44, efiRpm, Endian.little);
+    data_.setFloat32(48, efiPw, Endian.little);
+    data_.setFloat32(52, efiFuelFlow, Endian.little);
+    data_.setFloat32(56, efiFuelConsumed, Endian.little);
+    data_.setFloat32(60, efiBaro, Endian.little);
+    data_.setFloat32(64, efiMat, Endian.little);
+    data_.setFloat32(68, efiClt, Endian.little);
+    data_.setFloat32(72, efiTps, Endian.little);
+    data_.setFloat32(76, efiExhaustGasTemperature, Endian.little);
+    data_.setUint16(80, generatorStatus, Endian.little);
+    data_.setUint16(82, efiStatus, Endian.little);
+    data_.setUint8(84, efiIndex);
     return data_;
   }
 }
 
-/// Version and capability of autopilot software. This should be emitted in response to a request with MAV_CMD_REQUEST_MESSAGE.
-///
-/// AUTOPILOT_VERSION
-class AutopilotVersion implements MavlinkMessage {
-  static const int _mavlinkMessageId = 148;
-
-  static const int _mavlinkCrcExtra = 178;
-
-  static const int mavlinkEncodedLength = 78;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// Bitmap of capabilities
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// enum: [MavProtocolCapability]
-  ///
-  /// capabilities
-  final MavProtocolCapability capabilities;
-
-  /// UID if provided by hardware (see uid2)
-  ///
-  /// MAVLink type: uint64_t
-  ///
-  /// uid
-  final uint64_t uid;
-
-  /// Firmware version number.
-  /// The field must be encoded as 4 bytes, where each byte (shown from MSB to LSB) is part of a semantic version: (major) (minor) (patch) (FIRMWARE_VERSION_TYPE).
-  ///
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// flight_sw_version
-  final uint32_t flightSwVersion;
-
-  /// Middleware version number
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// middleware_sw_version
-  final uint32_t middlewareSwVersion;
-
-  /// Operating system version number
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// os_sw_version
-  final uint32_t osSwVersion;
-
-  /// HW / board version (last 8 bits should be silicon ID, if any). The first 16 bits of this field specify a board type from an enumeration stored at https://github.com/PX4/PX4-Bootloader/blob/master/board_types.txt and with extensive additions at https://github.com/ArduPilot/ardupilot/blob/master/Tools/AP_Bootloader/board_types.txt
-  ///
-  /// MAVLink type: uint32_t
-  ///
-  /// board_version
-  final uint32_t boardVersion;
-
-  /// ID of the board vendor
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// vendor_id
-  final uint16_t vendorId;
-
-  /// ID of the product
-  ///
-  /// MAVLink type: uint16_t
-  ///
-  /// product_id
-  final uint16_t productId;
-
-  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// flight_custom_version
-  final List<int8_t> flightCustomVersion;
-
-  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// middleware_custom_version
-  final List<int8_t> middlewareCustomVersion;
-
-  /// Custom version field, commonly the first 8 bytes of the git hash. This is not an unique identifier, but should allow to identify the commit using the main version number even for very large code bases.
-  ///
-  /// MAVLink type: uint8_t[8]
-  ///
-  /// os_custom_version
-  final List<int8_t> osCustomVersion;
-
-  /// UID if provided by hardware (supersedes the uid field. If this is non-zero, use this field, otherwise use uid)
-  ///
-  /// MAVLink type: uint8_t[18]
-  ///
-  /// Extensions field for MAVLink 2.
-  ///
-  /// uid2
-  final List<int8_t> uid2;
-
-  AutopilotVersion({
-    required this.capabilities,
-    required this.uid,
-    required this.flightSwVersion,
-    required this.middlewareSwVersion,
-    required this.osSwVersion,
-    required this.boardVersion,
-    required this.vendorId,
-    required this.productId,
-    required this.flightCustomVersion,
-    required this.middlewareCustomVersion,
-    required this.osCustomVersion,
-    required this.uid2,
-  });
-
-  AutopilotVersion copyWith({
-    MavProtocolCapability? capabilities,
-    uint64_t? uid,
-    uint32_t? flightSwVersion,
-    uint32_t? middlewareSwVersion,
-    uint32_t? osSwVersion,
-    uint32_t? boardVersion,
-    uint16_t? vendorId,
-    uint16_t? productId,
-    List<int8_t>? flightCustomVersion,
-    List<int8_t>? middlewareCustomVersion,
-    List<int8_t>? osCustomVersion,
-    List<int8_t>? uid2,
-  }) {
-    return AutopilotVersion(
-      capabilities: capabilities ?? this.capabilities,
-      uid: uid ?? this.uid,
-      flightSwVersion: flightSwVersion ?? this.flightSwVersion,
-      middlewareSwVersion: middlewareSwVersion ?? this.middlewareSwVersion,
-      osSwVersion: osSwVersion ?? this.osSwVersion,
-      boardVersion: boardVersion ?? this.boardVersion,
-      vendorId: vendorId ?? this.vendorId,
-      productId: productId ?? this.productId,
-      flightCustomVersion: flightCustomVersion ?? this.flightCustomVersion,
-      middlewareCustomVersion:
-          middlewareCustomVersion ?? this.middlewareCustomVersion,
-      osCustomVersion: osCustomVersion ?? this.osCustomVersion,
-      uid2: uid2 ?? this.uid2,
-    );
-  }
-
-  factory AutopilotVersion.parse(ByteData data_) {
-    if (data_.lengthInBytes < AutopilotVersion.mavlinkEncodedLength) {
-      var len = AutopilotVersion.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var capabilities = data_.getUint64(0, Endian.little);
-    var uid = data_.getUint64(8, Endian.little);
-    var flightSwVersion = data_.getUint32(16, Endian.little);
-    var middlewareSwVersion = data_.getUint32(20, Endian.little);
-    var osSwVersion = data_.getUint32(24, Endian.little);
-    var boardVersion = data_.getUint32(28, Endian.little);
-    var vendorId = data_.getUint16(32, Endian.little);
-    var productId = data_.getUint16(34, Endian.little);
-    var flightCustomVersion = MavlinkMessage.asUint8List(data_, 36, 8);
-    var middlewareCustomVersion = MavlinkMessage.asUint8List(data_, 44, 8);
-    var osCustomVersion = MavlinkMessage.asUint8List(data_, 52, 8);
-    var uid2 = MavlinkMessage.asUint8List(data_, 60, 18);
-
-    return AutopilotVersion(
-        capabilities: capabilities,
-        uid: uid,
-        flightSwVersion: flightSwVersion,
-        middlewareSwVersion: middlewareSwVersion,
-        osSwVersion: osSwVersion,
-        boardVersion: boardVersion,
-        vendorId: vendorId,
-        productId: productId,
-        flightCustomVersion: flightCustomVersion,
-        middlewareCustomVersion: middlewareCustomVersion,
-        osCustomVersion: osCustomVersion,
-        uid2: uid2);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, capabilities, Endian.little);
-    data_.setUint64(8, uid, Endian.little);
-    data_.setUint32(16, flightSwVersion, Endian.little);
-    data_.setUint32(20, middlewareSwVersion, Endian.little);
-    data_.setUint32(24, osSwVersion, Endian.little);
-    data_.setUint32(28, boardVersion, Endian.little);
-    data_.setUint16(32, vendorId, Endian.little);
-    data_.setUint16(34, productId, Endian.little);
-    MavlinkMessage.setUint8List(data_, 36, flightCustomVersion);
-    MavlinkMessage.setUint8List(data_, 44, middlewareCustomVersion);
-    MavlinkMessage.setUint8List(data_, 52, osCustomVersion);
-    MavlinkMessage.setUint8List(data_, 60, uid2);
-    return data_;
-  }
-}
-
-class MavlinkDialectStandard implements MavlinkDialect {
+class MavlinkDialectLoweheiser implements MavlinkDialect {
   static const int mavlinkVersion = 3;
 
   @override
@@ -1918,10 +1752,8 @@ class MavlinkDialectStandard implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
-      case 33:
-        return GlobalPositionInt.parse(data);
-      case 148:
-        return AutopilotVersion.parse(data);
+      case 10151:
+        return LoweheiserGovEfi.parse(data);
       default:
         return null;
     }
@@ -1932,10 +1764,8 @@ class MavlinkDialectStandard implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat._mavlinkCrcExtra;
-      case 33:
-        return GlobalPositionInt._mavlinkCrcExtra;
-      case 148:
-        return AutopilotVersion._mavlinkCrcExtra;
+      case 10151:
+        return LoweheiserGovEfi._mavlinkCrcExtra;
       default:
         return -1;
     }
