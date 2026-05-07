@@ -8871,74 +8871,36 @@ const GlobalPositionFlags globalPositionUnhealthy = 1;
 /// GLOBAL_POSITION_PRIMARY
 const GlobalPositionFlags globalPositionPrimary = 2;
 
-/// Available autopilot modes for ualberta uav
 ///
-/// UALBERTA_AUTOPILOT_MODE
-typedef UalbertaAutopilotMode = int;
+/// How to configure LEDs. We can:
+/// - Set all LEDs to the first color in our colors array.
+/// - Set up to 8 consecutive LEDs, starting from a given index, to colors provided in an array.
+/// - Set the LED colors to change according to the flight mode.
+/// - Turn all LEDs off (clear).
+///
+///
+/// LED_CONFIG_MODE
+typedef LedConfigMode = int;
 
-/// Raw input pulse widts sent to output
+/// Set all LEDs in the target strip to the first color in our colors array.
 ///
-/// MODE_MANUAL_DIRECT
-const UalbertaAutopilotMode modeManualDirect = 1;
+/// LED_CONFIG_MODE_ALL
+const LedConfigMode ledConfigModeAll = 0;
 
-/// Inputs are normalized using calibration, the converted back to raw pulse widths for output
+/// Set up to 8 consecutive LEDs, starting from the given index, to the colors provided in the colors array.
 ///
-/// MODE_MANUAL_SCALED
-const UalbertaAutopilotMode modeManualScaled = 2;
+/// LED_CONFIG_MODE_INDEX
+const LedConfigMode ledConfigModeIndex = 1;
 
+/// Set all LEDs in target strip to change color according to the flight mode.
 ///
-/// MODE_AUTO_PID_ATT
-const UalbertaAutopilotMode modeAutoPidAtt = 3;
+/// LED_CONFIG_MODE_FOLLOW_FLIGHT_MODE
+const LedConfigMode ledConfigModeFollowFlightMode = 2;
 
+/// Set all LEDs in the target strip to black (turn off).
 ///
-/// MODE_AUTO_PID_VEL
-const UalbertaAutopilotMode modeAutoPidVel = 4;
-
-///
-/// MODE_AUTO_PID_POS
-const UalbertaAutopilotMode modeAutoPidPos = 5;
-
-/// Navigation filter mode
-///
-/// UALBERTA_NAV_MODE
-typedef UalbertaNavMode = int;
-
-///
-/// NAV_AHRS_INIT
-const UalbertaNavMode navAhrsInit = 1;
-
-/// AHRS mode
-///
-/// NAV_AHRS
-const UalbertaNavMode navAhrs = 2;
-
-/// INS/GPS initialization mode
-///
-/// NAV_INS_GPS_INIT
-const UalbertaNavMode navInsGpsInit = 3;
-
-/// INS/GPS mode
-///
-/// NAV_INS_GPS
-const UalbertaNavMode navInsGps = 4;
-
-/// Mode currently commanded by pilot
-///
-/// UALBERTA_PILOT_MODE
-typedef UalbertaPilotMode = int;
-
-///
-/// PILOT_MANUAL
-const UalbertaPilotMode pilotManual = 1;
-
-///
-/// PILOT_AUTO
-const UalbertaPilotMode pilotAuto = 2;
-
-/// Rotomotion mode
-///
-/// PILOT_ROTO
-const UalbertaPilotMode pilotRoto = 3;
+/// LED_CONFIG_MODE_CLEAR
+const LedConfigMode ledConfigModeClear = 3;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 ///
@@ -46789,15 +46751,24 @@ class HygrometerSensor implements MavlinkMessage {
   }
 }
 
-/// Accelerometer and Gyro biases from the navigation filter
 ///
-/// NAV_FILTER_BIAS
-class NavFilterBias implements MavlinkMessage {
-  static const int _mavlinkMessageId = 220;
+/// Set the colors on an LED strip. The mode field determines how the colors are set. We can:
+/// - Set all LEDs to the first color in our colors array.
+/// - Set up to 8 consecutive LEDs, starting from a given index, to colors provided in an array.
+/// - Set the LED colors to change according to the flight mode.
+/// - Turn all LEDs off (clear).
+/// Which LED strip to configure is specified by the id field.
+/// The colors field is an array of up to 8 colors, each represented as a 32-bit integer in the format 0xWWRRGGBB
+/// where WW is white, RR is the intensity of the red color channel, GG is green, and BB is blue.
+///
+///
+/// LED_STRIP_CONFIG
+class LedStripConfig implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52600;
 
-  static const int _mavlinkCrcExtra = 34;
+  static const int _mavlinkCrcExtra = 181;
 
-  static const int mavlinkEncodedLength = 32;
+  static const int mavlinkEncodedLength = 38;
 
   @override
   int get mavlinkMessageId => _mavlinkMessageId;
@@ -46805,325 +46776,235 @@ class NavFilterBias implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// Timestamp (microseconds)
+  /// Array of 32-bit color values (0xWWRRGGBB).
   ///
-  /// MAVLink type: uint64_t
+  /// MAVLink type: uint32_t[8]
   ///
-  /// usec
-  final uint64_t usec;
+  /// colors
+  final List<int32_t> colors;
 
-  /// b_f[0]
-  ///
-  /// MAVLink type: float
-  ///
-  /// accel_0
-  final float accel0;
-
-  /// b_f[1]
-  ///
-  /// MAVLink type: float
-  ///
-  /// accel_1
-  final float accel1;
-
-  /// b_f[2]
-  ///
-  /// MAVLink type: float
-  ///
-  /// accel_2
-  final float accel2;
-
-  /// b_f[0]
-  ///
-  /// MAVLink type: float
-  ///
-  /// gyro_0
-  final float gyro0;
-
-  /// b_f[1]
-  ///
-  /// MAVLink type: float
-  ///
-  /// gyro_1
-  final float gyro1;
-
-  /// b_f[2]
-  ///
-  /// MAVLink type: float
-  ///
-  /// gyro_2
-  final float gyro2;
-
-  NavFilterBias({
-    required this.usec,
-    required this.accel0,
-    required this.accel1,
-    required this.accel2,
-    required this.gyro0,
-    required this.gyro1,
-    required this.gyro2,
-  });
-
-  NavFilterBias copyWith({
-    uint64_t? usec,
-    float? accel0,
-    float? accel1,
-    float? accel2,
-    float? gyro0,
-    float? gyro1,
-    float? gyro2,
-  }) {
-    return NavFilterBias(
-      usec: usec ?? this.usec,
-      accel0: accel0 ?? this.accel0,
-      accel1: accel1 ?? this.accel1,
-      accel2: accel2 ?? this.accel2,
-      gyro0: gyro0 ?? this.gyro0,
-      gyro1: gyro1 ?? this.gyro1,
-      gyro2: gyro2 ?? this.gyro2,
-    );
-  }
-
-  factory NavFilterBias.parse(ByteData data_) {
-    if (data_.lengthInBytes < NavFilterBias.mavlinkEncodedLength) {
-      var len = NavFilterBias.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var usec = data_.getUint64(0, Endian.little);
-    var accel0 = data_.getFloat32(8, Endian.little);
-    var accel1 = data_.getFloat32(12, Endian.little);
-    var accel2 = data_.getFloat32(16, Endian.little);
-    var gyro0 = data_.getFloat32(20, Endian.little);
-    var gyro1 = data_.getFloat32(24, Endian.little);
-    var gyro2 = data_.getFloat32(28, Endian.little);
-
-    return NavFilterBias(
-        usec: usec,
-        accel0: accel0,
-        accel1: accel1,
-        accel2: accel2,
-        gyro0: gyro0,
-        gyro1: gyro1,
-        gyro2: gyro2);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, usec, Endian.little);
-    data_.setFloat32(8, accel0, Endian.little);
-    data_.setFloat32(12, accel1, Endian.little);
-    data_.setFloat32(16, accel2, Endian.little);
-    data_.setFloat32(20, gyro0, Endian.little);
-    data_.setFloat32(24, gyro1, Endian.little);
-    data_.setFloat32(28, gyro2, Endian.little);
-    return data_;
-  }
-}
-
-/// Complete set of calibration parameters for the radio
-///
-/// RADIO_CALIBRATION
-class RadioCalibration implements MavlinkMessage {
-  static const int _mavlinkMessageId = 221;
-
-  static const int _mavlinkCrcExtra = 71;
-
-  static const int mavlinkEncodedLength = 42;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// Aileron setpoints: left, center, right
-  ///
-  /// MAVLink type: uint16_t[3]
-  ///
-  /// aileron
-  final List<int16_t> aileron;
-
-  /// Elevator setpoints: nose down, center, nose up
-  ///
-  /// MAVLink type: uint16_t[3]
-  ///
-  /// elevator
-  final List<int16_t> elevator;
-
-  /// Rudder setpoints: nose left, center, nose right
-  ///
-  /// MAVLink type: uint16_t[3]
-  ///
-  /// rudder
-  final List<int16_t> rudder;
-
-  /// Tail gyro mode/gain setpoints: heading hold, rate mode
-  ///
-  /// MAVLink type: uint16_t[2]
-  ///
-  /// gyro
-  final List<int16_t> gyro;
-
-  /// Pitch curve setpoints (every 25%)
-  ///
-  /// MAVLink type: uint16_t[5]
-  ///
-  /// pitch
-  final List<int16_t> pitch;
-
-  /// Throttle curve setpoints (every 25%)
-  ///
-  /// MAVLink type: uint16_t[5]
-  ///
-  /// throttle
-  final List<int16_t> throttle;
-
-  RadioCalibration({
-    required this.aileron,
-    required this.elevator,
-    required this.rudder,
-    required this.gyro,
-    required this.pitch,
-    required this.throttle,
-  });
-
-  RadioCalibration copyWith({
-    List<int16_t>? aileron,
-    List<int16_t>? elevator,
-    List<int16_t>? rudder,
-    List<int16_t>? gyro,
-    List<int16_t>? pitch,
-    List<int16_t>? throttle,
-  }) {
-    return RadioCalibration(
-      aileron: aileron ?? this.aileron,
-      elevator: elevator ?? this.elevator,
-      rudder: rudder ?? this.rudder,
-      gyro: gyro ?? this.gyro,
-      pitch: pitch ?? this.pitch,
-      throttle: throttle ?? this.throttle,
-    );
-  }
-
-  factory RadioCalibration.parse(ByteData data_) {
-    if (data_.lengthInBytes < RadioCalibration.mavlinkEncodedLength) {
-      var len = RadioCalibration.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var aileron = MavlinkMessage.asUint16List(data_, 0, 3);
-    var elevator = MavlinkMessage.asUint16List(data_, 6, 3);
-    var rudder = MavlinkMessage.asUint16List(data_, 12, 3);
-    var gyro = MavlinkMessage.asUint16List(data_, 18, 2);
-    var pitch = MavlinkMessage.asUint16List(data_, 22, 5);
-    var throttle = MavlinkMessage.asUint16List(data_, 32, 5);
-
-    return RadioCalibration(
-        aileron: aileron,
-        elevator: elevator,
-        rudder: rudder,
-        gyro: gyro,
-        pitch: pitch,
-        throttle: throttle);
-  }
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    MavlinkMessage.setUint16List(data_, 0, aileron);
-    MavlinkMessage.setUint16List(data_, 6, elevator);
-    MavlinkMessage.setUint16List(data_, 12, rudder);
-    MavlinkMessage.setUint16List(data_, 18, gyro);
-    MavlinkMessage.setUint16List(data_, 22, pitch);
-    MavlinkMessage.setUint16List(data_, 32, throttle);
-    return data_;
-  }
-}
-
-/// System status specific to ualberta uav
-///
-/// UALBERTA_SYS_STATUS
-class UalbertaSysStatus implements MavlinkMessage {
-  static const int _mavlinkMessageId = 222;
-
-  static const int _mavlinkCrcExtra = 15;
-
-  static const int mavlinkEncodedLength = 3;
-
-  @override
-  int get mavlinkMessageId => _mavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// System mode, see UALBERTA_AUTOPILOT_MODE ENUM
+  /// System ID.
   ///
   /// MAVLink type: uint8_t
+  ///
+  /// target_system
+  final uint8_t targetSystem;
+
+  /// Component ID (Normally 134 for an LED Strip Controller).
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// target_component
+  final uint8_t targetComponent;
+
+  /// How to configure LEDs.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// enum: [LedConfigMode]
   ///
   /// mode
-  final uint8_t mode;
+  final LedConfigMode mode;
 
-  /// Navigation mode, see UALBERTA_NAV_MODE ENUM
+  /// Set LEDs starting from this index.
   ///
   /// MAVLink type: uint8_t
   ///
-  /// nav_mode
-  final uint8_t navMode;
+  /// index
+  final uint8_t index;
 
-  /// Pilot mode, see UALBERTA_PILOT_MODE
+  /// The number of LEDs to set (up to 8).
   ///
   /// MAVLink type: uint8_t
   ///
-  /// pilot
-  final uint8_t pilot;
+  /// length
+  final uint8_t length;
 
-  UalbertaSysStatus({
+  /// Which strip to configure. UINT8_MAX for all strips.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// id
+  final uint8_t id;
+
+  LedStripConfig({
+    required this.colors,
+    required this.targetSystem,
+    required this.targetComponent,
     required this.mode,
-    required this.navMode,
-    required this.pilot,
+    required this.index,
+    required this.length,
+    required this.id,
   });
 
-  UalbertaSysStatus copyWith({
-    uint8_t? mode,
-    uint8_t? navMode,
-    uint8_t? pilot,
+  LedStripConfig copyWith({
+    List<int32_t>? colors,
+    uint8_t? targetSystem,
+    uint8_t? targetComponent,
+    LedConfigMode? mode,
+    uint8_t? index,
+    uint8_t? length,
+    uint8_t? id,
   }) {
-    return UalbertaSysStatus(
+    return LedStripConfig(
+      colors: colors ?? this.colors,
+      targetSystem: targetSystem ?? this.targetSystem,
+      targetComponent: targetComponent ?? this.targetComponent,
       mode: mode ?? this.mode,
-      navMode: navMode ?? this.navMode,
-      pilot: pilot ?? this.pilot,
+      index: index ?? this.index,
+      length: length ?? this.length,
+      id: id ?? this.id,
     );
   }
 
-  factory UalbertaSysStatus.parse(ByteData data_) {
-    if (data_.lengthInBytes < UalbertaSysStatus.mavlinkEncodedLength) {
-      var len = UalbertaSysStatus.mavlinkEncodedLength - data_.lengthInBytes;
+  factory LedStripConfig.parse(ByteData data_) {
+    if (data_.lengthInBytes < LedStripConfig.mavlinkEncodedLength) {
+      var len = LedStripConfig.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var mode = data_.getUint8(0);
-    var navMode = data_.getUint8(1);
-    var pilot = data_.getUint8(2);
+    var colors = MavlinkMessage.asUint32List(data_, 0, 8);
+    var targetSystem = data_.getUint8(32);
+    var targetComponent = data_.getUint8(33);
+    var mode = data_.getUint8(34);
+    var index = data_.getUint8(35);
+    var length = data_.getUint8(36);
+    var id = data_.getUint8(37);
 
-    return UalbertaSysStatus(mode: mode, navMode: navMode, pilot: pilot);
+    return LedStripConfig(
+        colors: colors,
+        targetSystem: targetSystem,
+        targetComponent: targetComponent,
+        mode: mode,
+        index: index,
+        length: length,
+        id: id);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, mode);
-    data_.setUint8(1, navMode);
-    data_.setUint8(2, pilot);
+    MavlinkMessage.setUint32List(data_, 0, colors);
+    data_.setUint8(32, targetSystem);
+    data_.setUint8(33, targetComponent);
+    data_.setUint8(34, mode);
+    data_.setUint8(35, index);
+    data_.setUint8(36, length);
+    data_.setUint8(37, id);
     return data_;
   }
 }
 
-class MavlinkDialectUalberta implements MavlinkDialect {
+/// Current LED State. Can be emitted by LED Strip Controller.
+///
+/// LED_STRIP_STATE
+class LedStripState implements MavlinkMessage {
+  static const int _mavlinkMessageId = 52601;
+
+  static const int _mavlinkCrcExtra = 102;
+
+  static const int mavlinkEncodedLength = 36;
+
+  @override
+  int get mavlinkMessageId => _mavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Array of 32-bit color values (0xWWRRGGBB).
+  ///
+  /// MAVLink type: uint32_t[8]
+  ///
+  /// colors
+  final List<int32_t> colors;
+
+  /// How many LEDs are being reported in this message.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// length
+  final uint8_t length;
+
+  /// Index of first LED being reported.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// index
+  final uint8_t index;
+
+  /// Which strip is being reported.
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// id
+  final uint8_t id;
+
+  /// Are the LED colors changing according to the flight mode (1) or not (0).
+  ///
+  /// MAVLink type: uint8_t
+  ///
+  /// following_flight_mode
+  final uint8_t followingFlightMode;
+
+  LedStripState({
+    required this.colors,
+    required this.length,
+    required this.index,
+    required this.id,
+    required this.followingFlightMode,
+  });
+
+  LedStripState copyWith({
+    List<int32_t>? colors,
+    uint8_t? length,
+    uint8_t? index,
+    uint8_t? id,
+    uint8_t? followingFlightMode,
+  }) {
+    return LedStripState(
+      colors: colors ?? this.colors,
+      length: length ?? this.length,
+      index: index ?? this.index,
+      id: id ?? this.id,
+      followingFlightMode: followingFlightMode ?? this.followingFlightMode,
+    );
+  }
+
+  factory LedStripState.parse(ByteData data_) {
+    if (data_.lengthInBytes < LedStripState.mavlinkEncodedLength) {
+      var len = LedStripState.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var colors = MavlinkMessage.asUint32List(data_, 0, 8);
+    var length = data_.getUint8(32);
+    var index = data_.getUint8(33);
+    var id = data_.getUint8(34);
+    var followingFlightMode = data_.getUint8(35);
+
+    return LedStripState(
+        colors: colors,
+        length: length,
+        index: index,
+        id: id,
+        followingFlightMode: followingFlightMode);
+  }
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    MavlinkMessage.setUint32List(data_, 0, colors);
+    data_.setUint8(32, length);
+    data_.setUint8(33, index);
+    data_.setUint8(34, id);
+    data_.setUint8(35, followingFlightMode);
+    return data_;
+  }
+}
+
+class MavlinkDialectStemstudios implements MavlinkDialect {
   static const int mavlinkVersion = 3;
 
   @override
@@ -47600,12 +47481,10 @@ class MavlinkDialectUalberta implements MavlinkDialect {
         return OpenDroneIdSystemUpdate.parse(data);
       case 12920:
         return HygrometerSensor.parse(data);
-      case 220:
-        return NavFilterBias.parse(data);
-      case 221:
-        return RadioCalibration.parse(data);
-      case 222:
-        return UalbertaSysStatus.parse(data);
+      case 52600:
+        return LedStripConfig.parse(data);
+      case 52601:
+        return LedStripState.parse(data);
       default:
         return null;
     }
@@ -48082,12 +47961,10 @@ class MavlinkDialectUalberta implements MavlinkDialect {
         return OpenDroneIdSystemUpdate._mavlinkCrcExtra;
       case 12920:
         return HygrometerSensor._mavlinkCrcExtra;
-      case 220:
-        return NavFilterBias._mavlinkCrcExtra;
-      case 221:
-        return RadioCalibration._mavlinkCrcExtra;
-      case 222:
-        return UalbertaSysStatus._mavlinkCrcExtra;
+      case 52600:
+        return LedStripConfig._mavlinkCrcExtra;
+      case 52601:
+        return LedStripState._mavlinkCrcExtra;
       default:
         return -1;
     }
