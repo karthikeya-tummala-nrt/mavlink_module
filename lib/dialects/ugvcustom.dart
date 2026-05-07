@@ -1,335 +1,317 @@
 import 'dart:typed_data';
-import 'package:dart_mavlink/mavlink_dialect.dart';
-import 'package:dart_mavlink/mavlink_message.dart';
-import 'package:dart_mavlink/types.dart';
+import 'package:mavlink_module/mavlink_dialect.dart';
+import 'package:mavlink_module/mavlink_message.dart';
+import 'package:mavlink_module/types.dart';
 
 /// MAVLINK component type reported in HEARTBEAT message. Flight controllers must report the type of the vehicle on which they are mounted (e.g. MAV_TYPE_OCTOROTOR). All other components must report a value appropriate for their type (e.g. a camera must use MAV_TYPE_CAMERA).
-///
 /// MAV_TYPE
 typedef MavType = int;
 
 /// Generic micro air vehicle
-///
 /// MAV_TYPE_GENERIC
 const MavType mavTypeGeneric = 0;
 
 /// Onboard companion controller
-///
 /// MAV_TYPE_ONBOARD_CONTROLLER
 const MavType mavTypeOnboardController = 18;
 
 /// Micro air vehicle / autopilot classes. This identifies the individual model.
-///
 /// MAV_AUTOPILOT
 typedef MavAutopilot = int;
 
 /// Generic autopilot, full support for everything
-///
 /// MAV_AUTOPILOT_GENERIC
 const MavAutopilot mavAutopilotGeneric = 0;
 
 /// No valid autopilot, e.g. a GCS or other MAVLink component
-///
 /// MAV_AUTOPILOT_INVALID
 const MavAutopilot mavAutopilotInvalid = 8;
 
-/// These flags encode the MAV mode, see MAV_MODE enum for useful combinations.
-///
-/// MAV_MODE_FLAG
-typedef MavModeFlag = int;
-
-/// 0b00000001 system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
-///
-/// MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
-const MavModeFlag mavModeFlagCustomModeEnabled = 1;
-
-///
 /// MAV_STATE
 typedef MavState = int;
 
 /// Uninitialized system, state is unknown.
-///
 /// MAV_STATE_UNINIT
 const MavState mavStateUninit = 0;
 
 /// System is grounded and on standby. It can be launched any time.
-///
 /// MAV_STATE_STANDBY
 const MavState mavStateStandby = 3;
 
 /// System is active and might be already airborne. Motors are engaged.
-///
 /// MAV_STATE_ACTIVE
 const MavState mavStateActive = 4;
 
 /// Commands to be executed by the MAV. They can be executed on user request, or as part of a mission script. If the action is used in a mission, the parameter mapping to the waypoint/mission message is as follows: Param 1, Param 2, Param 3, Param 4, X: Param 5, Y:Param 6, Z:Param 7. This command list is similar what ARINC 424 is for commercial aircraft: A data format how to interpret waypoint/mission data. NaN and INT32_MAX may be used in float/integer params (respectively) to indicate optional/default values (e.g. to use the component's current yaw or latitude rather than a specific value). See https://mavlink.io/en/guide/xml_schema.html#MAV_CMD for information about the structure of the MAV_CMD entries
-///
 /// MAV_CMD
 typedef MavCmd = int;
 
 /// Set system mode.
-///
 /// MAV_CMD_DO_SET_MODE
 const MavCmd mavCmdDoSetMode = 176;
 
 /// Arms / Disarms a component
-///
 /// MAV_CMD_COMPONENT_ARM_DISARM
 const MavCmd mavCmdComponentArmDisarm = 400;
 
 /// Request the target system(s) emit a single instance of a specified message (i.e. a "one-shot" version of MAV_CMD_SET_MESSAGE_INTERVAL).
-///
 /// MAV_CMD_REQUEST_MESSAGE
 const MavCmd mavCmdRequestMessage = 512;
 
 /// Result from a MAVLink command (MAV_CMD)
-///
 /// MAV_RESULT
 typedef MavResult = int;
 
 /// Command is valid (is supported and has valid parameters), and was executed.
-///
 /// MAV_RESULT_ACCEPTED
 const MavResult mavResultAccepted = 0;
 
 /// Command is valid, but cannot be executed at this time. This is used to indicate a problem that should be fixed just by waiting (e.g. a state machine is busy, can't arm because have not got GPS lock, etc.). Retrying later should work.
-///
 /// MAV_RESULT_TEMPORARILY_REJECTED
 const MavResult mavResultTemporarilyRejected = 1;
 
 /// Command is invalid; it is supported but one or more parameter values are invalid (i.e. parameter reserved, value allowed by spec but not supported by flight stack, and so on). Retrying the same command and parameters will not work.
-///
 /// MAV_RESULT_DENIED
 const MavResult mavResultDenied = 2;
 
 /// Command is not supported (unknown).
-///
 /// MAV_RESULT_UNSUPPORTED
 const MavResult mavResultUnsupported = 3;
 
 /// Command is valid, but execution has failed. This is used to indicate any non-temporary or unexpected problem, i.e. any problem that must be fixed before the command can succeed/be retried. For example, attempting to write a file when out of memory, attempting to arm when sensors are not calibrated, etc.
-///
 /// MAV_RESULT_FAILED
 const MavResult mavResultFailed = 4;
 
 /// Command is valid and is being executed. This will be followed by further progress updates, i.e. the component may send further COMMAND_ACK messages with result MAV_RESULT_IN_PROGRESS (at a rate decided by the implementation), and must terminate by sending a COMMAND_ACK message with final result of the operation. The COMMAND_ACK.progress field can be used to indicate the progress of the operation.
-///
 /// MAV_RESULT_IN_PROGRESS
 const MavResult mavResultInProgress = 5;
 
 /// Command has been cancelled (as a result of receiving a COMMAND_CANCEL message).
-///
 /// MAV_RESULT_CANCELLED
 const MavResult mavResultCancelled = 6;
 
 /// Command is only accepted when sent as a COMMAND_LONG.
-///
 /// MAV_RESULT_COMMAND_LONG_ONLY
 const MavResult mavResultCommandLongOnly = 7;
 
 /// Command is only accepted when sent as a COMMAND_INT.
-///
 /// MAV_RESULT_COMMAND_INT_ONLY
 const MavResult mavResultCommandIntOnly = 8;
 
 /// Command is invalid because a frame is required and the specified frame is not supported.
-///
 /// MAV_RESULT_COMMAND_UNSUPPORTED_MAV_FRAME
 const MavResult mavResultCommandUnsupportedMavFrame = 9;
 
 /// WIP.
 /// Command has been rejected because source system is not in control of the target system/component.
-///
 /// MAV_RESULT_NOT_IN_CONTROL
 const MavResult mavResultNotInControl = 10;
 
 /// Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive).
-///
 /// MAV_BOOL
 typedef MavBool = int;
 
 /// False.
-///
 /// MAV_BOOL_FALSE
 const MavBool mavBoolFalse = 0;
 
 /// True.
-///
 /// MAV_BOOL_TRUE
 const MavBool mavBoolTrue = 1;
 
-/// These encode the sub systems whose status is sent as part of the MANUAL_CONTROL message.
-///
-/// TOGGLE_SWITCH_BITMASK
-typedef ToggleSwitchBitmask = int;
+/// Used to indicate the current state of the extra feature buttons
+/// PUSH_BUTTONS
+typedef PushButtons = int;
+
+/// a single short press of extra feature 1 button.
+/// EXTRA_FEATURE_1_PRESS
+const PushButtons extraFeature1Press = 1;
+
+/// a long press of extra feature 1 button.
+/// EXTRA_FEATURE_1_LONG_PRESS
+const PushButtons extraFeature1LongPress = 2;
+
+/// a single short press of extra feature 2 button.
+/// EXTRA_FEATURE_2_PRESS
+const PushButtons extraFeature2Press = 4;
+
+/// a long press of extra feature 2 button.
+/// EXTRA_FEATURE_2_LONG_PRESS
+const PushButtons extraFeature2LongPress = 8;
+
+/// Used to indicate the position of the tristate toggle switches.
+/// TOGGLE_SWITCH_POS
+typedef ToggleSwitchPos = int;
 
 /// 0x01 Forward Direction
-///
 /// FORWARD_DIRECTION
-const ToggleSwitchBitmask forwardDirection = 1;
+const ToggleSwitchPos forwardDirection = 1;
 
 /// 0x02 Reverse Direction
-///
 /// REVERSE_DIRECTION
-const ToggleSwitchBitmask reverseDirection = 2;
+const ToggleSwitchPos reverseDirection = 2;
 
 /// 0x04 Medium Speed
-///
 /// MEDIUM_SPEED
-const ToggleSwitchBitmask mediumSpeed = 4;
+const ToggleSwitchPos mediumSpeed = 4;
 
 /// 0x08 High Speed
-///
 /// HIGH_SPEED
-const ToggleSwitchBitmask highSpeed = 8;
+const ToggleSwitchPos highSpeed = 8;
+
+/// These flags encode the MAV mode, see MAV_MODE enum for useful combinations.
+/// MAV_MODE_FLAG
+typedef MavModeFlag = int;
+
+/// 0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. Additional note: this flag is to be ignore when sent in the command MAV_CMD_DO_SET_MODE and MAV_CMD_COMPONENT_ARM_DISARM shall be used instead. The flag can still be used to report the armed state.
+/// MAV_MODE_FLAG_SAFETY_ARMED
+const MavModeFlag mavModeFlagSafetyArmed = 128;
+
+/// 0b01000000 remote control input is enabled.
+/// MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
+const MavModeFlag mavModeFlagManualInputEnabled = 64;
+
+/// 0b00100000 hardware in the loop simulation. All motors / actuators are blocked, but internal software is full operational.
+/// MAV_MODE_FLAG_HIL_ENABLED
+const MavModeFlag mavModeFlagHilEnabled = 32;
+
+/// 0b00010000 system stabilizes electronically its attitude (and optionally position). It needs however further control inputs to move around.
+/// MAV_MODE_FLAG_STABILIZE_ENABLED
+const MavModeFlag mavModeFlagStabilizeEnabled = 16;
+
+/// 0b00001000 guided mode enabled, system flies waypoints / mission items.
+/// MAV_MODE_FLAG_GUIDED_ENABLED
+const MavModeFlag mavModeFlagGuidedEnabled = 8;
+
+/// 0b00000100 autonomous mode enabled, system finds its own goal positions. Guided flag can be set or not, depends on the actual implementation.
+/// MAV_MODE_FLAG_AUTO_ENABLED
+const MavModeFlag mavModeFlagAutoEnabled = 4;
+
+/// 0b00000010 system has a test mode enabled. This flag is intended for temporary system tests and should not be used for stable implementations.
+/// MAV_MODE_FLAG_TEST_ENABLED
+const MavModeFlag mavModeFlagTestEnabled = 2;
+
+/// 0b00000001 system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
+/// MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
+const MavModeFlag mavModeFlagCustomModeEnabled = 1;
 
 /// These encode the sub systems whose status is sent as part of the UGV_MASTER_HEALTH message.
-///
 /// UGV_COMP_BITMASK
 typedef UgvCompBitmask = int;
 
 /// 0x01 Atlas Compute
-///
 /// UGV_COMP_COMP_COMPUTE
 const UgvCompBitmask ugvCompCompCompute = 1;
 
 /// 0x02 Vehicle Control Unit (VCU)
-///
 /// UGV_COMP_VCU
 const UgvCompBitmask ugvCompVcu = 2;
 
 /// 0x04 Motor Controller (front)
-///
 /// UGV_COMP_MOTOR_FRONT
 const UgvCompBitmask ugvCompMotorFront = 4;
 
 /// 0x08 Motor Controller (rear)
-///
 /// UGV_COMP_MOTOR_REAR
 const UgvCompBitmask ugvCompMotorRear = 8;
 
 /// 0x10 Battery Management System (BMS)
-///
 /// UGV_COMP_BMS
 const UgvCompBitmask ugvCompBms = 16;
 
 /// 0x20 Power Distribution Unit (PDU)
-///
 /// UGV_COMP_PDU
 const UgvCompBitmask ugvCompPdu = 32;
 
 /// 0x40 Inertial Navigation System (INS)
-///
 /// UGV_COMP_INS
 const UgvCompBitmask ugvCompIns = 64;
 
 /// 0x80 GNSS
-///
 /// UGV_COMP_GNSS
 const UgvCompBitmask ugvCompGnss = 128;
 
 /// 0x100 Ultrasonic sensors
-///
 /// UGV_COMP_ULTRASONIC
 const UgvCompBitmask ugvCompUltrasonic = 256;
 
 /// 0x200 3D Lidar
-///
 /// UGV_COMP_LIDAR
 const UgvCompBitmask ugvCompLidar = 512;
 
 /// 0x400 Display unit
-///
 /// UGV_COMP_DISPLAY
 const UgvCompBitmask ugvCompDisplay = 1024;
 
 /// 0x800 UHF Radio link
-///
 /// UGV_COMP_UHF_RADIO
 const UgvCompBitmask ugvCompUhfRadio = 2048;
 
 /// 0x1000 Hand Controller
-///
 /// UGV_COMP_HAND_CTRL
 const UgvCompBitmask ugvCompHandCtrl = 4096;
 
 /// 0x2000 Ground Control Station (GCS)
-///
 /// UGV_COMP_GCS
 const UgvCompBitmask ugvCompGcs = 8192;
 
 /// These encode the sub systems whose status is sent as part of the UGV_MASTER_HEALTH message.
-///
 /// UGV_MOTOR_ERROR_BITMASK
 typedef UgvMotorErrorBitmask = int;
 
 /// 0x01 Motor Overload
-///
 /// MOTOR_OVERLOAD
 const UgvMotorErrorBitmask motorOverload = 1;
 
 /// 0x02 Motor Overtemperature
-///
 /// MOTOR_OVERVTEMP
 const UgvMotorErrorBitmask motorOvervtemp = 2;
 
 /// 0x04 Motor Controller (left)
-///
 /// MOTOR_OVER_SPEED
 const UgvMotorErrorBitmask motorOverSpeed = 4;
 
 /// 0x08 Motor Controller (right)
-///
 /// MOTOR_STALLED
 const UgvMotorErrorBitmask motorStalled = 8;
 
 /// 0x10 Battery Management System (BMS)
-///
 /// MOTOR_PHASE_LOSS
 const UgvMotorErrorBitmask motorPhaseLoss = 16;
 
 /// 0x20 Power Distribution Unit (PDU)
-///
 /// MOTOR_HALL_FAULT
 const UgvMotorErrorBitmask motorHallFault = 32;
 
 /// 0x40 Display unit
-///
 /// MOTOR_ENCODER_FAULT
 const UgvMotorErrorBitmask motorEncoderFault = 64;
 
 /// 0x80 UHF Radio link
-///
 /// MOTOR_BRAKE_FAULT
 const UgvMotorErrorBitmask motorBrakeFault = 128;
 
 /// These encode the sub systems whose status is sent as part of the UGV_MASTER_HEALTH message.
-///
 /// UGV_SENSOR_ERROR_BITMASK
 typedef UgvSensorErrorBitmask = int;
 
 /// 0x01 Battery Under Voltage
-///
 /// BAT_UNDER_VOLTAGE
 const UgvSensorErrorBitmask batUnderVoltage = 1;
 
 /// 0x02 Battery Over Current
-///
 /// BAT_OVER_CURRENT
 const UgvSensorErrorBitmask batOverCurrent = 2;
 
 /// 0x04 Battery Over Voltage
-///
 /// BAT_OVER_VOLTAGE
 const UgvSensorErrorBitmask batOverVoltage = 4;
 
 /// 0x08 Battery Over Temperature
-///
 /// BAT_OVER_TEMP
 const UgvSensorErrorBitmask batOverTemp = 8;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
-///
 /// HEARTBEAT
 class Heartbeat implements MavlinkMessage {
   static const int _mavlinkMessageId = 0;
@@ -345,52 +327,36 @@ class Heartbeat implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// A bitfield for use for autopilot-specific flags
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// custom_mode
   final uint32_t customMode;
 
   /// Vehicle or component type. For a flight controller component the vehicle type (quadrotor, helicopter, etc.). For other components the component type (e.g. camera, gimbal, etc.). This should be used in preference to component id for identifying the component type.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [MavType]
-  ///
   /// type
   final MavType type;
 
   /// Autopilot type / class. Use MAV_AUTOPILOT_INVALID for components that are not flight controllers.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [MavAutopilot]
-  ///
   /// autopilot
   final MavAutopilot autopilot;
 
   /// System mode bitmap.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [MavModeFlag]
-  ///
   /// base_mode
   final MavModeFlag baseMode;
 
   /// System status flag.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [MavState]
-  ///
   /// system_status
   final MavState systemStatus;
 
   /// MAVLink version, not writable by user, gets added by protocol because of magic data type: uint8_t_mavlink_version
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// mavlink_version
   final uint8_t mavlinkVersion;
 
@@ -462,7 +428,6 @@ class Heartbeat implements MavlinkMessage {
 /// Components that are using a less reliable time source, such as a battery-backed real time clock, can choose to match their system clock to that of a system that indicates a more recent time.
 /// This allows more broadly accurate date stamping of logs, and so on.
 /// If precise time synchronization is needed then use TIMESYNC instead.
-///
 /// SYSTEM_TIME
 class SystemTime implements MavlinkMessage {
   static const int _mavlinkMessageId = 2;
@@ -478,20 +443,14 @@ class SystemTime implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Timestamp (UNIX epoch time).
-  ///
   /// MAVLink type: uint64_t
-  ///
   /// units: us
-  ///
   /// time_unix_usec
   final uint64_t timeUnixUsec;
 
   /// Timestamp (time since system boot).
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// units: ms
-  ///
   /// time_boot_ms
   final uint32_t timeBootMs;
 
@@ -534,7 +493,6 @@ class SystemTime implements MavlinkMessage {
 
 /// Manual (joystick) control message.
 /// This message represents movement axes and button using standard joystick axes nomenclature. Unused axes can be disabled and buttons states are transmitted as individual on/off bits of a bitmask. For more information see https://mavlink.io/en/services/manual_control.html
-///
 /// MANUAL_CONTROL
 class ManualControl implements MavlinkMessage {
   static const int _mavlinkMessageId = 69;
@@ -550,136 +508,94 @@ class ManualControl implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// X-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to forward(1000)-backward(-1000) movement on a joystick and the pitch of a vehicle.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// x
   final int16_t x;
 
   /// Y-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to left(-1000)-right(1000) movement on a joystick and the roll of a vehicle.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// y
   final int16_t y;
 
   /// Z-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a separate slider movement with maximum being 1000 and minimum being -1000 on a joystick and the thrust of a vehicle. Positive values are positive thrust, negative values are negative thrust.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// z
   final int16_t z;
 
   /// R-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a twisting of the joystick, with clockwise being 1000 and counter-clockwise being -1000, and the yaw of a vehicle.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// r
   final int16_t r;
 
   /// A bitfield corresponding to the joystick buttons' 0-15 current state, 1 for pressed, 0 for released. The lowest bit corresponds to Button 1.
-  ///
   /// MAVLink type: uint16_t
-  ///
+  /// enum: [PushButtons]
   /// push_buttons
-  final uint16_t pushButtons;
+  final PushButtons pushButtons;
 
   /// The system to be controlled.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// target
   final uint8_t target;
 
   /// A bitfield corresponding to the joystick buttons' 16-31 current state, 1 for pressed, 0 for released. The lowest bit corresponds to Button 16.
-  ///
   /// MAVLink type: uint16_t
-  ///
-  /// enum: [TristateToggleSwitches]
-  ///
+  /// enum: [ToggleSwitchPos]
   /// Extensions field for MAVLink 2.
-  ///
   /// tristate_toggle_switches
-  final TristateToggleSwitches tristateToggleSwitches;
+  final ToggleSwitchPos tristateToggleSwitches;
 
   /// Set bits to 1 to indicate which of the following extension fields contain valid data: bit 0: pitch, bit 1: roll, bit 2: aux1, bit 3: aux2, bit 4: aux3, bit 5: aux4, bit 6: aux5, bit 7: aux6
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// enabled_extensions
   final uint8_t enabledExtensions;
 
   /// Pitch-only-axis, normalized to the range [-1000,1000]. Generally corresponds to pitch on vehicles with additional degrees of freedom. Valid if bit 0 of enabled_extensions field is set. Set to 0 if invalid.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// s
   final int16_t s;
 
   /// Roll-only-axis, normalized to the range [-1000,1000]. Generally corresponds to roll on vehicles with additional degrees of freedom. Valid if bit 1 of enabled_extensions field is set. Set to 0 if invalid.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// t
   final int16_t t;
 
   /// Aux continuous input field 1. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 2 of enabled_extensions field is set. 0 if bit 2 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux1
   final int16_t aux1;
 
   /// Aux continuous input field 2. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 3 of enabled_extensions field is set. 0 if bit 3 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux2
   final int16_t aux2;
 
   /// Aux continuous input field 3. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 4 of enabled_extensions field is set. 0 if bit 4 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux3
   final int16_t aux3;
 
   /// Aux continuous input field 4. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 5 of enabled_extensions field is set. 0 if bit 5 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux4
   final int16_t aux4;
 
   /// Aux continuous input field 5. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 6 of enabled_extensions field is set. 0 if bit 6 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux5
   final int16_t aux5;
 
   /// Aux continuous input field 6. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 7 of enabled_extensions field is set. 0 if bit 7 is unset.
-  ///
   /// MAVLink type: int16_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// aux6
   final int16_t aux6;
 
@@ -707,9 +623,9 @@ class ManualControl implements MavlinkMessage {
     int16_t? y,
     int16_t? z,
     int16_t? r,
-    uint16_t? pushButtons,
+    PushButtons? pushButtons,
     uint8_t? target,
-    TristateToggleSwitches? tristateToggleSwitches,
+    ToggleSwitchPos? tristateToggleSwitches,
     uint8_t? enabledExtensions,
     int16_t? s,
     int16_t? t,
@@ -808,7 +724,6 @@ class ManualControl implements MavlinkMessage {
 }
 
 /// Send a command with up to seven parameters to the MAV. COMMAND_INT is generally preferred when sending MAV_CMD commands that include positional information; it offers higher precision and allows the MAV_FRAME to be specified (which may otherwise be ambiguous, particularly for altitude). The command microservice is documented at https://mavlink.io/en/services/command.html
-///
 /// COMMAND_LONG
 class CommandLong implements MavlinkMessage {
   static const int _mavlinkMessageId = 76;
@@ -824,81 +739,58 @@ class CommandLong implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Parameter 1 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param1
   final float param1;
 
   /// Parameter 2 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param2
   final float param2;
 
   /// Parameter 3 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param3
   final float param3;
 
   /// Parameter 4 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param4
   final float param4;
 
   /// Parameter 5 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param5
   final float param5;
 
   /// Parameter 6 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param6
   final float param6;
 
   /// Parameter 7 (for the specific command).
-  ///
   /// MAVLink type: float
-  ///
   /// param7
   final float param7;
 
   /// Command ID (of command to send).
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// enum: [MavCmd]
-  ///
   /// command
   final MavCmd command;
 
   /// System which should execute the command
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// target_system
   final uint8_t targetSystem;
 
   /// Component which should execute the command, 0 for all components
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// target_component
   final uint8_t targetComponent;
 
   /// 0: First transmission of this command. 1-255: Confirmation transmissions (e.g. for kill command)
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// confirmation
   final uint8_t confirmation;
 
@@ -996,7 +888,6 @@ class CommandLong implements MavlinkMessage {
 }
 
 /// Report status of a command. Includes feedback whether the command was executed. The command microservice is documented at https://mavlink.io/en/services/command.html
-///
 /// COMMAND_ACK
 class CommandAck implements MavlinkMessage {
   static const int _mavlinkMessageId = 77;
@@ -1012,58 +903,39 @@ class CommandAck implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Command ID (of acknowledged command).
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// enum: [MavCmd]
-  ///
   /// command
   final MavCmd command;
 
   /// Result of command.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [MavResult]
-  ///
   /// result
   final MavResult result;
 
   /// The progress percentage when result is MAV_RESULT_IN_PROGRESS. Values: [0-100], or UINT8_MAX if the progress is unknown.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// units: %
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// progress
   final uint8_t progress;
 
   /// Additional result information. Can be set with a command-specific enum containing command-specific error reasons for why the command might be denied. If used, the associated enum must be documented in the corresponding MAV_CMD (this enum should have a 0 value to indicate "unused" or "unknown").
-  ///
   /// MAVLink type: int32_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// result_param2
   final int32_t resultParam2;
 
   /// System ID of the target recipient. This is the ID of the system that sent the command for which this COMMAND_ACK is an acknowledgement.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// target_system
   final uint8_t targetSystem;
 
   /// Component ID of the target recipient. This is the ID of the system that sent the command for which this COMMAND_ACK is an acknowledgement.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// target_component
   final uint8_t targetComponent;
 
@@ -1141,7 +1013,6 @@ class CommandAck implements MavlinkMessage {
 /// The message sequence is repeated numerous times with results being filtered/averaged to estimate the offset.
 /// See also: https://mavlink.io/en/services/timesync.html.
 ///
-///
 /// TIMESYNC
 class Timesync implements MavlinkMessage {
   static const int _mavlinkMessageId = 111;
@@ -1157,38 +1028,26 @@ class Timesync implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Time sync timestamp 1. Syncing: 0. Responding: Timestamp of responding component.
-  ///
   /// MAVLink type: int64_t
-  ///
   /// units: ns
-  ///
   /// tc1
   final int64_t tc1;
 
   /// Time sync timestamp 2. Timestamp of syncing component (mirrored in response).
-  ///
   /// MAVLink type: int64_t
-  ///
   /// units: ns
-  ///
   /// ts1
   final int64_t ts1;
 
   /// Target system id. Request: 0 (broadcast) or id of specific system. Response must contain system id of the requesting component.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// target_system
   final uint8_t targetSystem;
 
   /// Target component id. Request: 0 (broadcast) or id of specific component. Response must contain component id of the requesting component.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// Extensions field for MAVLink 2.
-  ///
   /// target_component
   final uint8_t targetComponent;
 
@@ -1244,7 +1103,6 @@ class Timesync implements MavlinkMessage {
 }
 
 /// UGV MASTER HEALTH
-///
 /// UGV_SYSTEM_INFO
 class UgvSystemInfo implements MavlinkMessage {
   static const int _mavlinkMessageId = 50001;
@@ -1260,105 +1118,73 @@ class UgvSystemInfo implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// subsystem present
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// enum: [UgvCompBitmask]
-  ///
   /// ugv_subsystem_present
   final UgvCompBitmask ugvSubsystemPresent;
 
   /// subsystem enabled
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// enum: [UgvCompBitmask]
-  ///
   /// ugv_subsystem_enabled
   final UgvCompBitmask ugvSubsystemEnabled;
 
   /// subsystem health
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// enum: [UgvCompBitmask]
-  ///
   /// ugv_subsystem_health
   final UgvCompBitmask ugvSubsystemHealth;
 
   /// Compute load (d%)
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// compute_load
   final uint16_t computeLoad;
 
   /// System Voltage (mV)
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// main_voltage
   final uint16_t mainVoltage;
 
   /// System Current (cA)
-  ///
   /// MAVLink type: int16_t
-  ///
   /// main_current
   final int16_t mainCurrent;
 
   /// PDU 12V Voltage (mV)
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// pdu_12v_voltage
   final uint16_t pdu12vVoltage;
 
   /// Drop Rate (c%)
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// drop_rate_comm
   final uint16_t dropRateComm;
 
   /// VCU Fault Errors Count
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// vcu_fault_errors
   final uint16_t vcuFaultErrors;
 
   /// Front Motor Errors Count
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// enum: [UgvMotorErrorBitmask]
-  ///
   /// front_motor_errors
   final UgvMotorErrorBitmask frontMotorErrors;
 
   /// Rear Motor Errors Count
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// enum: [UgvMotorErrorBitmask]
-  ///
   /// rear_motor_errors
   final UgvMotorErrorBitmask rearMotorErrors;
 
   /// Sensor Bus Errors Count
-  ///
   /// MAVLink type: uint16_t
-  ///
   /// enum: [UgvSensorErrorBitmask]
-  ///
   /// sensor_bus_errors
   final UgvSensorErrorBitmask sensorBusErrors;
 
   /// Remaining Battery (%)
-  ///
   /// MAVLink type: int8_t
-  ///
   /// battery_remaining
   final int8_t batteryRemaining;
 
@@ -1468,7 +1294,6 @@ class UgvSystemInfo implements MavlinkMessage {
 }
 
 /// Describes the current software version along with checksum of the particular component of UGV system.
-///
 /// UGV_COMPONENT_VERSION
 class UgvComponentVersion implements MavlinkMessage {
   static const int _mavlinkMessageId = 50002;
@@ -1484,30 +1309,22 @@ class UgvComponentVersion implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Software version. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: uint32_t
-  ///
   /// software_version
   final uint32_t softwareVersion;
 
   /// SHA 256 Checksum of the build
-  ///
   /// MAVLink type: uint8_t[32]
-  ///
   /// checksum
   final List<int8_t> checksum;
 
   /// Target system id. Request: 0 (broadcast) or id of specific system. Response must contain system id of the requesting component.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// target_system
   final uint8_t targetSystem;
 
   /// Target component id. Request: 0 (broadcast) or id of specific component. Response must contain component id of the requesting component.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// target_component
   final uint8_t targetComponent;
 
@@ -1563,7 +1380,6 @@ class UgvComponentVersion implements MavlinkMessage {
 }
 
 /// Describes the current software version along with checksum of whole UGV system
-///
 /// UGV_SUBSYSTEM_VERSION
 class UgvSubsystemVersion implements MavlinkMessage {
   static const int _mavlinkMessageId = 50003;
@@ -1579,79 +1395,57 @@ class UgvSubsystemVersion implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Type of the subsystem software.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// type
   final uint8_t type;
 
   /// Software version of component 1. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[4]
-  ///
   /// component1_sw
   final List<char> component1Sw;
 
   /// Software checksum of component 1. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[32]
-  ///
   /// component1_checksum
   final List<char> component1Checksum;
 
   /// Software version of component 2. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[4]
-  ///
   /// component2_sw
   final List<char> component2Sw;
 
   /// Software checksum of component 2. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[32]
-  ///
   /// component2_checksum
   final List<char> component2Checksum;
 
   /// Software version of component 3. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[4]
-  ///
   /// component3_sw
   final List<char> component3Sw;
 
   /// Software checksum of component 3. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[32]
-  ///
   /// component3_checksum
   final List<char> component3Checksum;
 
   /// Software version of component 4. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[4]
-  ///
   /// component4_sw
   final List<char> component4Sw;
 
   /// Software checksum of component 4. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[32]
-  ///
   /// component4_checksum
   final List<char> component4Checksum;
 
   /// Software version of component 5. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[4]
-  ///
   /// component5_sw
   final List<char> component5Sw;
 
   /// Software checksum of component 5. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  ///
   /// MAVLink type: char[32]
-  ///
   /// component5_checksum
   final List<char> component5Checksum;
 

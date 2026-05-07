@@ -1,24 +1,20 @@
 import 'dart:typed_data';
-import 'package:dart_mavlink/mavlink_dialect.dart';
-import 'package:dart_mavlink/mavlink_message.dart';
-import 'package:dart_mavlink/types.dart';
+import 'package:mavlink_module/mavlink_dialect.dart';
+import 'package:mavlink_module/mavlink_message.dart';
+import 'package:mavlink_module/types.dart';
 
-///
 /// AIRLINK_AUTH_RESPONSE_TYPE
 typedef AirlinkAuthResponseType = int;
 
 /// Login or password error
-///
 /// AIRLINK_ERROR_LOGIN_OR_PASS
 const AirlinkAuthResponseType airlinkErrorLoginOrPass = 0;
 
 /// Auth successful
-///
 /// AIRLINK_AUTH_OK
 const AirlinkAuthResponseType airlinkAuthOk = 1;
 
 /// Authorization package
-///
 /// AIRLINK_AUTH
 class AirlinkAuth implements MavlinkMessage {
   static const int _mavlinkMessageId = 52000;
@@ -34,16 +30,12 @@ class AirlinkAuth implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Login
-  ///
   /// MAVLink type: char[50]
-  ///
   /// login
   final List<char> login;
 
   /// Password
-  ///
   /// MAVLink type: char[50]
-  ///
   /// password
   final List<char> password;
 
@@ -85,7 +77,6 @@ class AirlinkAuth implements MavlinkMessage {
 }
 
 /// Response to the authorization request
-///
 /// AIRLINK_AUTH_RESPONSE
 class AirlinkAuthResponse implements MavlinkMessage {
   static const int _mavlinkMessageId = 52001;
@@ -101,11 +92,8 @@ class AirlinkAuthResponse implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// Response type
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [AirlinkAuthResponseType]
-  ///
   /// resp_type
   final AirlinkAuthResponseType respType;
 

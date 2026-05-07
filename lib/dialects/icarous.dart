@@ -1,54 +1,42 @@
 import 'dart:typed_data';
-import 'package:dart_mavlink/mavlink_dialect.dart';
-import 'package:dart_mavlink/mavlink_message.dart';
-import 'package:dart_mavlink/types.dart';
+import 'package:mavlink_module/mavlink_dialect.dart';
+import 'package:mavlink_module/mavlink_message.dart';
+import 'package:mavlink_module/types.dart';
 
-///
 /// ICAROUS_TRACK_BAND_TYPES
 typedef IcarousTrackBandTypes = int;
 
-///
 /// ICAROUS_TRACK_BAND_TYPE_NONE
 const IcarousTrackBandTypes icarousTrackBandTypeNone = 0;
 
-///
 /// ICAROUS_TRACK_BAND_TYPE_NEAR
 const IcarousTrackBandTypes icarousTrackBandTypeNear = 1;
 
-///
 /// ICAROUS_TRACK_BAND_TYPE_RECOVERY
 const IcarousTrackBandTypes icarousTrackBandTypeRecovery = 2;
 
-///
 /// ICAROUS_FMS_STATE
 typedef IcarousFmsState = int;
 
-///
 /// ICAROUS_FMS_STATE_IDLE
 const IcarousFmsState icarousFmsStateIdle = 0;
 
-///
 /// ICAROUS_FMS_STATE_TAKEOFF
 const IcarousFmsState icarousFmsStateTakeoff = 1;
 
-///
 /// ICAROUS_FMS_STATE_CLIMB
 const IcarousFmsState icarousFmsStateClimb = 2;
 
-///
 /// ICAROUS_FMS_STATE_CRUISE
 const IcarousFmsState icarousFmsStateCruise = 3;
 
-///
 /// ICAROUS_FMS_STATE_APPROACH
 const IcarousFmsState icarousFmsStateApproach = 4;
 
-///
 /// ICAROUS_FMS_STATE_LAND
 const IcarousFmsState icarousFmsStateLand = 5;
 
 /// ICAROUS heartbeat
-///
 /// ICAROUS_HEARTBEAT
 class IcarousHeartbeat implements MavlinkMessage {
   static const int _mavlinkMessageId = 42000;
@@ -64,11 +52,8 @@ class IcarousHeartbeat implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// See the FMS_STATE enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousFmsState]
-  ///
   /// status
   final IcarousFmsState status;
 
@@ -105,7 +90,6 @@ class IcarousHeartbeat implements MavlinkMessage {
 }
 
 /// Kinematic multi bands (track) output from Daidalus
-///
 /// ICAROUS_KINEMATIC_BANDS
 class IcarousKinematicBands implements MavlinkMessage {
   static const int _mavlinkMessageId = 42001;
@@ -121,144 +105,97 @@ class IcarousKinematicBands implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// min angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// min1
   final float min1;
 
   /// max angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// max1
   final float max1;
 
   /// min angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// min2
   final float min2;
 
   /// max angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// max2
   final float max2;
 
   /// min angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// min3
   final float min3;
 
   /// max angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// max3
   final float max3;
 
   /// min angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// min4
   final float min4;
 
   /// max angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// max4
   final float max4;
 
   /// min angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// min5
   final float min5;
 
   /// max angle (degrees)
-  ///
   /// MAVLink type: float
-  ///
   /// units: deg
-  ///
   /// max5
   final float max5;
 
   /// Number of track bands
-  ///
   /// MAVLink type: int8_t
-  ///
   /// numBands
   final int8_t numbands;
 
   /// See the TRACK_BAND_TYPES enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousTrackBandTypes]
-  ///
   /// type1
   final IcarousTrackBandTypes type1;
 
   /// See the TRACK_BAND_TYPES enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousTrackBandTypes]
-  ///
   /// type2
   final IcarousTrackBandTypes type2;
 
   /// See the TRACK_BAND_TYPES enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousTrackBandTypes]
-  ///
   /// type3
   final IcarousTrackBandTypes type3;
 
   /// See the TRACK_BAND_TYPES enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousTrackBandTypes]
-  ///
   /// type4
   final IcarousTrackBandTypes type4;
 
   /// See the TRACK_BAND_TYPES enum.
-  ///
   /// MAVLink type: uint8_t
-  ///
   /// enum: [IcarousTrackBandTypes]
-  ///
   /// type5
   final IcarousTrackBandTypes type5;
 
