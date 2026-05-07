@@ -207,13 +207,13 @@ const UgvCompBitmask ugvCompCompCompute = 1;
 /// UGV_COMP_VCU
 const UgvCompBitmask ugvCompVcu = 2;
 
-/// 0x04 Motor Controller (front)
-/// UGV_COMP_MOTOR_FRONT
-const UgvCompBitmask ugvCompMotorFront = 4;
+/// 0x04 Motor Controller (left)
+/// UGV_COMP_LEFT_MOTOR
+const UgvCompBitmask ugvCompLeftMotor = 4;
 
-/// 0x08 Motor Controller (rear)
-/// UGV_COMP_MOTOR_REAR
-const UgvCompBitmask ugvCompMotorRear = 8;
+/// 0x08 Motor Controller (right)
+/// UGV_COMP_RIGHT_MOTOR
+const UgvCompBitmask ugvCompRightMotor = 8;
 
 /// 0x10 Battery Management System (BMS)
 /// UGV_COMP_BMS
@@ -223,37 +223,21 @@ const UgvCompBitmask ugvCompBms = 16;
 /// UGV_COMP_PDU
 const UgvCompBitmask ugvCompPdu = 32;
 
-/// 0x40 Inertial Navigation System (INS)
-/// UGV_COMP_INS
-const UgvCompBitmask ugvCompIns = 64;
-
-/// 0x80 GNSS
-/// UGV_COMP_GNSS
-const UgvCompBitmask ugvCompGnss = 128;
-
-/// 0x100 Ultrasonic sensors
-/// UGV_COMP_ULTRASONIC
-const UgvCompBitmask ugvCompUltrasonic = 256;
-
-/// 0x200 3D Lidar
-/// UGV_COMP_LIDAR
-const UgvCompBitmask ugvCompLidar = 512;
-
-/// 0x400 Display unit
-/// UGV_COMP_DISPLAY
-const UgvCompBitmask ugvCompDisplay = 1024;
-
-/// 0x800 UHF Radio link
+/// 0x40 UHF radio
 /// UGV_COMP_UHF_RADIO
-const UgvCompBitmask ugvCompUhfRadio = 2048;
+const UgvCompBitmask ugvCompUhfRadio = 64;
 
-/// 0x1000 Hand Controller
+/// 0x80 Display
+/// UGV_COMP_DISPLAY
+const UgvCompBitmask ugvCompDisplay = 128;
+
+/// 0x100 Hand controller
 /// UGV_COMP_HAND_CTRL
-const UgvCompBitmask ugvCompHandCtrl = 4096;
+const UgvCompBitmask ugvCompHandCtrl = 256;
 
-/// 0x2000 Ground Control Station (GCS)
+/// 0x200 Ground Control Station (GCS)
 /// UGV_COMP_GCS
-const UgvCompBitmask ugvCompGcs = 8192;
+const UgvCompBitmask ugvCompGcs = 512;
 
 /// These encode the sub systems whose status is sent as part of the UGV_MASTER_HEALTH message.
 /// UGV_MOTOR_ERROR_BITMASK
@@ -264,8 +248,8 @@ typedef UgvMotorErrorBitmask = int;
 const UgvMotorErrorBitmask motorOverload = 1;
 
 /// 0x02 Motor Overtemperature
-/// MOTOR_OVERVTEMP
-const UgvMotorErrorBitmask motorOvervtemp = 2;
+/// MOTOR_OVER_TEMP
+const UgvMotorErrorBitmask motorOverTemp = 2;
 
 /// 0x04 Motor Controller (left)
 /// MOTOR_OVER_SPEED
@@ -290,6 +274,50 @@ const UgvMotorErrorBitmask motorEncoderFault = 64;
 /// 0x80 UHF Radio link
 /// MOTOR_BRAKE_FAULT
 const UgvMotorErrorBitmask motorBrakeFault = 128;
+
+/// Operator mode in which the UGV operates in. Mode A signifies hand controller, Mode B signfies GCS
+/// UGV_MAIN_MODE
+typedef UgvMainMode = int;
+
+/// Mode A, hand controller
+/// MODE_A
+const UgvMainMode modeA = 1;
+
+/// Mode B, GCS
+/// MODE_B
+const UgvMainMode modeB = 2;
+
+/// Operator submode in which the UGV operates in.
+/// UGV_SUB_MODE
+typedef UgvSubMode = int;
+
+/// no active submode
+/// NONE
+const UgvSubMode none = 0;
+
+/// Hold submode, used when UGV is temporarily in halt.
+/// HOLD
+const UgvSubMode hold = 10;
+
+/// Reason for sub-mode change.
+/// MODE_CHANGE_REASON
+typedef ModeChangeReason = int;
+
+/// submode changed due to GCS command
+/// GCS_COMMAND
+const ModeChangeReason gcsCommand = 0;
+
+/// submode changed due to activation of failsafe
+/// FAILSAFE
+const ModeChangeReason failsafe = 1;
+
+/// submode changed due to sensor fault
+/// SENSOR_FAULT
+const ModeChangeReason sensorFault = 2;
+
+/// submode change due to loss of communication
+/// COMM_LOSS
+const ModeChangeReason commLoss = 3;
 
 /// These encode the sub systems whose status is sent as part of the UGV_MASTER_HEALTH message.
 /// UGV_SENSOR_ERROR_BITMASK
@@ -1107,9 +1135,9 @@ class Timesync implements MavlinkMessage {
 class UgvSystemInfo implements MavlinkMessage {
   static const int _mavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 182;
+  static const int _mavlinkCrcExtra = 38;
 
-  static const int mavlinkEncodedLength = 31;
+  static const int mavlinkEncodedLength = 34;
 
   @override
   int get mavlinkMessageId => _mavlinkMessageId;
@@ -1150,34 +1178,29 @@ class UgvSystemInfo implements MavlinkMessage {
   /// main_current
   final int16_t mainCurrent;
 
-  /// PDU 12V Voltage (mV)
+  /// VCU Fault Errors Count
   /// MAVLink type: uint16_t
-  /// pdu_12v_voltage
-  final uint16_t pdu12vVoltage;
+  /// vcu_fault_errors
+  final uint16_t vcuFaultErrors;
 
   /// Drop Rate (c%)
   /// MAVLink type: uint16_t
   /// drop_rate_comm
   final uint16_t dropRateComm;
 
-  /// VCU Fault Errors Count
-  /// MAVLink type: uint16_t
-  /// vcu_fault_errors
-  final uint16_t vcuFaultErrors;
-
-  /// Front Motor Errors Count
+  /// Left Motor Errors Count
   /// MAVLink type: uint16_t
   /// enum: [UgvMotorErrorBitmask]
-  /// front_motor_errors
-  final UgvMotorErrorBitmask frontMotorErrors;
+  /// left_motor_errors
+  final UgvMotorErrorBitmask leftMotorErrors;
 
-  /// Rear Motor Errors Count
+  /// Right Motor Errors Count
   /// MAVLink type: uint16_t
   /// enum: [UgvMotorErrorBitmask]
-  /// rear_motor_errors
-  final UgvMotorErrorBitmask rearMotorErrors;
+  /// right_motor_errors
+  final UgvMotorErrorBitmask rightMotorErrors;
 
-  /// Sensor Bus Errors Count
+  /// Bitmask indicating BMS errors
   /// MAVLink type: uint16_t
   /// enum: [UgvSensorErrorBitmask]
   /// sensor_bus_errors
@@ -1188,6 +1211,36 @@ class UgvSystemInfo implements MavlinkMessage {
   /// battery_remaining
   final int8_t batteryRemaining;
 
+  /// Current active main mode ID
+  /// MAVLink type: uint8_t
+  /// enum: [UgvMainMode]
+  /// main_mode
+  final UgvMainMode mainMode;
+
+  /// current active sub mode ID
+  /// MAVLink type: uint8_t
+  /// enum: [UgvSubMode]
+  /// sub_mode
+  final UgvSubMode subMode;
+
+  /// Last main mode commanded by GCS via COMMAND_LONG
+  /// MAVLink type: uint8_t
+  /// enum: [UgvMainMode]
+  /// intended_main_mode
+  final UgvMainMode intendedMainMode;
+
+  /// Last sub mode commanded by GCS via COMMAND_LONG
+  /// MAVLink type: uint8_t
+  /// enum: [UgvSubMode]
+  /// intended_sub_mode
+  final UgvSubMode intendedSubMode;
+
+  /// Reason for last mode change
+  /// MAVLink type: uint8_t
+  /// enum: [ModeChangeReason]
+  /// mode_change_reason
+  final ModeChangeReason modeChangeReason;
+
   UgvSystemInfo({
     required this.ugvSubsystemPresent,
     required this.ugvSubsystemEnabled,
@@ -1195,13 +1248,17 @@ class UgvSystemInfo implements MavlinkMessage {
     required this.computeLoad,
     required this.mainVoltage,
     required this.mainCurrent,
-    required this.pdu12vVoltage,
-    required this.dropRateComm,
     required this.vcuFaultErrors,
-    required this.frontMotorErrors,
-    required this.rearMotorErrors,
+    required this.dropRateComm,
+    required this.leftMotorErrors,
+    required this.rightMotorErrors,
     required this.sensorBusErrors,
     required this.batteryRemaining,
+    required this.mainMode,
+    required this.subMode,
+    required this.intendedMainMode,
+    required this.intendedSubMode,
+    required this.modeChangeReason,
   });
 
   UgvSystemInfo copyWith({
@@ -1211,13 +1268,17 @@ class UgvSystemInfo implements MavlinkMessage {
     uint16_t? computeLoad,
     uint16_t? mainVoltage,
     int16_t? mainCurrent,
-    uint16_t? pdu12vVoltage,
-    uint16_t? dropRateComm,
     uint16_t? vcuFaultErrors,
-    UgvMotorErrorBitmask? frontMotorErrors,
-    UgvMotorErrorBitmask? rearMotorErrors,
+    uint16_t? dropRateComm,
+    UgvMotorErrorBitmask? leftMotorErrors,
+    UgvMotorErrorBitmask? rightMotorErrors,
     UgvSensorErrorBitmask? sensorBusErrors,
     int8_t? batteryRemaining,
+    UgvMainMode? mainMode,
+    UgvSubMode? subMode,
+    UgvMainMode? intendedMainMode,
+    UgvSubMode? intendedSubMode,
+    ModeChangeReason? modeChangeReason,
   }) {
     return UgvSystemInfo(
       ugvSubsystemPresent: ugvSubsystemPresent ?? this.ugvSubsystemPresent,
@@ -1226,13 +1287,17 @@ class UgvSystemInfo implements MavlinkMessage {
       computeLoad: computeLoad ?? this.computeLoad,
       mainVoltage: mainVoltage ?? this.mainVoltage,
       mainCurrent: mainCurrent ?? this.mainCurrent,
-      pdu12vVoltage: pdu12vVoltage ?? this.pdu12vVoltage,
-      dropRateComm: dropRateComm ?? this.dropRateComm,
       vcuFaultErrors: vcuFaultErrors ?? this.vcuFaultErrors,
-      frontMotorErrors: frontMotorErrors ?? this.frontMotorErrors,
-      rearMotorErrors: rearMotorErrors ?? this.rearMotorErrors,
+      dropRateComm: dropRateComm ?? this.dropRateComm,
+      leftMotorErrors: leftMotorErrors ?? this.leftMotorErrors,
+      rightMotorErrors: rightMotorErrors ?? this.rightMotorErrors,
       sensorBusErrors: sensorBusErrors ?? this.sensorBusErrors,
       batteryRemaining: batteryRemaining ?? this.batteryRemaining,
+      mainMode: mainMode ?? this.mainMode,
+      subMode: subMode ?? this.subMode,
+      intendedMainMode: intendedMainMode ?? this.intendedMainMode,
+      intendedSubMode: intendedSubMode ?? this.intendedSubMode,
+      modeChangeReason: modeChangeReason ?? this.modeChangeReason,
     );
   }
 
@@ -1249,13 +1314,17 @@ class UgvSystemInfo implements MavlinkMessage {
     var computeLoad = data_.getUint16(12, Endian.little);
     var mainVoltage = data_.getUint16(14, Endian.little);
     var mainCurrent = data_.getInt16(16, Endian.little);
-    var pdu12vVoltage = data_.getUint16(18, Endian.little);
+    var vcuFaultErrors = data_.getUint16(18, Endian.little);
     var dropRateComm = data_.getUint16(20, Endian.little);
-    var vcuFaultErrors = data_.getUint16(22, Endian.little);
-    var frontMotorErrors = data_.getUint16(24, Endian.little);
-    var rearMotorErrors = data_.getUint16(26, Endian.little);
-    var sensorBusErrors = data_.getUint16(28, Endian.little);
-    var batteryRemaining = data_.getInt8(30);
+    var leftMotorErrors = data_.getUint16(22, Endian.little);
+    var rightMotorErrors = data_.getUint16(24, Endian.little);
+    var sensorBusErrors = data_.getUint16(26, Endian.little);
+    var batteryRemaining = data_.getInt8(28);
+    var mainMode = data_.getUint8(29);
+    var subMode = data_.getUint8(30);
+    var intendedMainMode = data_.getUint8(31);
+    var intendedSubMode = data_.getUint8(32);
+    var modeChangeReason = data_.getUint8(33);
 
     return UgvSystemInfo(
         ugvSubsystemPresent: ugvSubsystemPresent,
@@ -1264,13 +1333,17 @@ class UgvSystemInfo implements MavlinkMessage {
         computeLoad: computeLoad,
         mainVoltage: mainVoltage,
         mainCurrent: mainCurrent,
-        pdu12vVoltage: pdu12vVoltage,
-        dropRateComm: dropRateComm,
         vcuFaultErrors: vcuFaultErrors,
-        frontMotorErrors: frontMotorErrors,
-        rearMotorErrors: rearMotorErrors,
+        dropRateComm: dropRateComm,
+        leftMotorErrors: leftMotorErrors,
+        rightMotorErrors: rightMotorErrors,
         sensorBusErrors: sensorBusErrors,
-        batteryRemaining: batteryRemaining);
+        batteryRemaining: batteryRemaining,
+        mainMode: mainMode,
+        subMode: subMode,
+        intendedMainMode: intendedMainMode,
+        intendedSubMode: intendedSubMode,
+        modeChangeReason: modeChangeReason);
   }
 
   @override
@@ -1282,13 +1355,17 @@ class UgvSystemInfo implements MavlinkMessage {
     data_.setUint16(12, computeLoad, Endian.little);
     data_.setUint16(14, mainVoltage, Endian.little);
     data_.setInt16(16, mainCurrent, Endian.little);
-    data_.setUint16(18, pdu12vVoltage, Endian.little);
+    data_.setUint16(18, vcuFaultErrors, Endian.little);
     data_.setUint16(20, dropRateComm, Endian.little);
-    data_.setUint16(22, vcuFaultErrors, Endian.little);
-    data_.setUint16(24, frontMotorErrors, Endian.little);
-    data_.setUint16(26, rearMotorErrors, Endian.little);
-    data_.setUint16(28, sensorBusErrors, Endian.little);
-    data_.setInt8(30, batteryRemaining);
+    data_.setUint16(22, leftMotorErrors, Endian.little);
+    data_.setUint16(24, rightMotorErrors, Endian.little);
+    data_.setUint16(26, sensorBusErrors, Endian.little);
+    data_.setInt8(28, batteryRemaining);
+    data_.setUint8(29, mainMode);
+    data_.setUint8(30, subMode);
+    data_.setUint8(31, intendedMainMode);
+    data_.setUint8(32, intendedSubMode);
+    data_.setUint8(33, modeChangeReason);
     return data_;
   }
 }
