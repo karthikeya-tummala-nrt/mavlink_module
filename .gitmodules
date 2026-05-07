@@ -1,0 +1,4 @@
+[submodule "mavlink"]
+	path = mavlink
+	url = https://github.com/karthikeya-tummala-nrt/mavlink.git
+	branch = master
