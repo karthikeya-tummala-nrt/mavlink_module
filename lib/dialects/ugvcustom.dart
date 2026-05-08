@@ -1461,7 +1461,7 @@ class UgvComponentVersion implements MavlinkMessage {
 class UgvSubsystemVersion implements MavlinkMessage {
   static const int _mavlinkMessageId = 50003;
 
-  static const int _mavlinkCrcExtra = 78;
+  static const int _mavlinkCrcExtra = 50;
 
   static const int mavlinkEncodedLength = 181;
 
@@ -1471,99 +1471,99 @@ class UgvSubsystemVersion implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
+  /// Software version of component 1. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
+  /// MAVLink type: uint32_t
+  /// component1_sw
+  final uint32_t component1Sw;
+
+  /// Software version of component 2. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
+  /// MAVLink type: uint32_t
+  /// component2_sw
+  final uint32_t component2Sw;
+
+  /// Software version of component 3. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
+  /// MAVLink type: uint32_t
+  /// component3_sw
+  final uint32_t component3Sw;
+
+  /// Software version of component 4. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
+  /// MAVLink type: uint32_t
+  /// component4_sw
+  final uint32_t component4Sw;
+
+  /// Software version of component 5. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
+  /// MAVLink type: uint32_t
+  /// component5_sw
+  final uint32_t component5Sw;
+
   /// Type of the subsystem software.
   /// MAVLink type: uint8_t
   /// type
   final uint8_t type;
 
-  /// Software version of component 1. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[4]
-  /// component1_sw
-  final List<char> component1Sw;
-
   /// Software checksum of component 1. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[32]
+  /// MAVLink type: uint8_t[32]
   /// component1_checksum
-  final List<char> component1Checksum;
-
-  /// Software version of component 2. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[4]
-  /// component2_sw
-  final List<char> component2Sw;
+  final List<int8_t> component1Checksum;
 
   /// Software checksum of component 2. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[32]
+  /// MAVLink type: uint8_t[32]
   /// component2_checksum
-  final List<char> component2Checksum;
-
-  /// Software version of component 3. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[4]
-  /// component3_sw
-  final List<char> component3Sw;
+  final List<int8_t> component2Checksum;
 
   /// Software checksum of component 3. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[32]
+  /// MAVLink type: uint8_t[32]
   /// component3_checksum
-  final List<char> component3Checksum;
-
-  /// Software version of component 4. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[4]
-  /// component4_sw
-  final List<char> component4Sw;
+  final List<int8_t> component3Checksum;
 
   /// Software checksum of component 4. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[32]
+  /// MAVLink type: uint8_t[32]
   /// component4_checksum
-  final List<char> component4Checksum;
-
-  /// Software version of component 5. The recommended format is SEMVER: 'major.minor.patch'  (any format may be used). The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[4]
-  /// component5_sw
-  final List<char> component5Sw;
+  final List<int8_t> component4Checksum;
 
   /// Software checksum of component 5. The field must be zero terminated if it has a value. The field is optional and can be empty/all zeros.
-  /// MAVLink type: char[32]
+  /// MAVLink type: uint8_t[32]
   /// component5_checksum
-  final List<char> component5Checksum;
+  final List<int8_t> component5Checksum;
 
   UgvSubsystemVersion({
-    required this.type,
     required this.component1Sw,
-    required this.component1Checksum,
     required this.component2Sw,
-    required this.component2Checksum,
     required this.component3Sw,
-    required this.component3Checksum,
     required this.component4Sw,
-    required this.component4Checksum,
     required this.component5Sw,
+    required this.type,
+    required this.component1Checksum,
+    required this.component2Checksum,
+    required this.component3Checksum,
+    required this.component4Checksum,
     required this.component5Checksum,
   });
 
   UgvSubsystemVersion copyWith({
+    uint32_t? component1Sw,
+    uint32_t? component2Sw,
+    uint32_t? component3Sw,
+    uint32_t? component4Sw,
+    uint32_t? component5Sw,
     uint8_t? type,
-    List<char>? component1Sw,
-    List<char>? component1Checksum,
-    List<char>? component2Sw,
-    List<char>? component2Checksum,
-    List<char>? component3Sw,
-    List<char>? component3Checksum,
-    List<char>? component4Sw,
-    List<char>? component4Checksum,
-    List<char>? component5Sw,
-    List<char>? component5Checksum,
+    List<int8_t>? component1Checksum,
+    List<int8_t>? component2Checksum,
+    List<int8_t>? component3Checksum,
+    List<int8_t>? component4Checksum,
+    List<int8_t>? component5Checksum,
   }) {
     return UgvSubsystemVersion(
-      type: type ?? this.type,
       component1Sw: component1Sw ?? this.component1Sw,
-      component1Checksum: component1Checksum ?? this.component1Checksum,
       component2Sw: component2Sw ?? this.component2Sw,
-      component2Checksum: component2Checksum ?? this.component2Checksum,
       component3Sw: component3Sw ?? this.component3Sw,
-      component3Checksum: component3Checksum ?? this.component3Checksum,
       component4Sw: component4Sw ?? this.component4Sw,
-      component4Checksum: component4Checksum ?? this.component4Checksum,
       component5Sw: component5Sw ?? this.component5Sw,
+      type: type ?? this.type,
+      component1Checksum: component1Checksum ?? this.component1Checksum,
+      component2Checksum: component2Checksum ?? this.component2Checksum,
+      component3Checksum: component3Checksum ?? this.component3Checksum,
+      component4Checksum: component4Checksum ?? this.component4Checksum,
       component5Checksum: component5Checksum ?? this.component5Checksum,
     );
   }
@@ -1575,46 +1575,46 @@ class UgvSubsystemVersion implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var type = data_.getUint8(0);
-    var component1Sw = MavlinkMessage.asInt8List(data_, 1, 4);
-    var component1Checksum = MavlinkMessage.asInt8List(data_, 5, 32);
-    var component2Sw = MavlinkMessage.asInt8List(data_, 37, 4);
-    var component2Checksum = MavlinkMessage.asInt8List(data_, 41, 32);
-    var component3Sw = MavlinkMessage.asInt8List(data_, 73, 4);
-    var component3Checksum = MavlinkMessage.asInt8List(data_, 77, 32);
-    var component4Sw = MavlinkMessage.asInt8List(data_, 109, 4);
-    var component4Checksum = MavlinkMessage.asInt8List(data_, 113, 32);
-    var component5Sw = MavlinkMessage.asInt8List(data_, 145, 4);
-    var component5Checksum = MavlinkMessage.asInt8List(data_, 149, 32);
+    var component1Sw = data_.getUint32(0, Endian.little);
+    var component2Sw = data_.getUint32(4, Endian.little);
+    var component3Sw = data_.getUint32(8, Endian.little);
+    var component4Sw = data_.getUint32(12, Endian.little);
+    var component5Sw = data_.getUint32(16, Endian.little);
+    var type = data_.getUint8(20);
+    var component1Checksum = MavlinkMessage.asUint8List(data_, 21, 32);
+    var component2Checksum = MavlinkMessage.asUint8List(data_, 53, 32);
+    var component3Checksum = MavlinkMessage.asUint8List(data_, 85, 32);
+    var component4Checksum = MavlinkMessage.asUint8List(data_, 117, 32);
+    var component5Checksum = MavlinkMessage.asUint8List(data_, 149, 32);
 
     return UgvSubsystemVersion(
-        type: type,
         component1Sw: component1Sw,
-        component1Checksum: component1Checksum,
         component2Sw: component2Sw,
-        component2Checksum: component2Checksum,
         component3Sw: component3Sw,
-        component3Checksum: component3Checksum,
         component4Sw: component4Sw,
-        component4Checksum: component4Checksum,
         component5Sw: component5Sw,
+        type: type,
+        component1Checksum: component1Checksum,
+        component2Checksum: component2Checksum,
+        component3Checksum: component3Checksum,
+        component4Checksum: component4Checksum,
         component5Checksum: component5Checksum);
   }
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, type);
-    MavlinkMessage.setInt8List(data_, 1, component1Sw);
-    MavlinkMessage.setInt8List(data_, 5, component1Checksum);
-    MavlinkMessage.setInt8List(data_, 37, component2Sw);
-    MavlinkMessage.setInt8List(data_, 41, component2Checksum);
-    MavlinkMessage.setInt8List(data_, 73, component3Sw);
-    MavlinkMessage.setInt8List(data_, 77, component3Checksum);
-    MavlinkMessage.setInt8List(data_, 109, component4Sw);
-    MavlinkMessage.setInt8List(data_, 113, component4Checksum);
-    MavlinkMessage.setInt8List(data_, 145, component5Sw);
-    MavlinkMessage.setInt8List(data_, 149, component5Checksum);
+    data_.setUint32(0, component1Sw, Endian.little);
+    data_.setUint32(4, component2Sw, Endian.little);
+    data_.setUint32(8, component3Sw, Endian.little);
+    data_.setUint32(12, component4Sw, Endian.little);
+    data_.setUint32(16, component5Sw, Endian.little);
+    data_.setUint8(20, type);
+    MavlinkMessage.setUint8List(data_, 21, component1Checksum);
+    MavlinkMessage.setUint8List(data_, 53, component2Checksum);
+    MavlinkMessage.setUint8List(data_, 85, component3Checksum);
+    MavlinkMessage.setUint8List(data_, 117, component4Checksum);
+    MavlinkMessage.setUint8List(data_, 149, component5Checksum);
     return data_;
   }
 }
