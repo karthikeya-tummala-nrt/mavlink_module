@@ -818,6 +818,21 @@ var data_ = ByteData(mavlinkEncodedLength);''';
     content += 'return data_;\n';
     content += '}\n';
 
+    content += '\n';
+
+    content += '''
+@override
+String toString() {
+  return ''';
+
+    for (var f in msg.orderedFields) {
+      content += "'${f.nameForDart}: \$${f.nameForDart}, '";
+    }
+
+    content += ';';
+    content += '''  
+}''';
+
     content += '}\n';
   }
 
