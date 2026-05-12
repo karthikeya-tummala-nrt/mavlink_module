@@ -662,14 +662,14 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     content += '/// ${msg.name}\n';
     content += 'class ${msg.nameForDart} implements MavlinkMessage {\n';
     content += '\n';
-    content += 'static const int _mavlinkMessageId = ${msg.id};\n';
+    content += 'static const int kMavlinkMessageId = ${msg.id};\n';
     content += '\n';
     content += 'static const int _mavlinkCrcExtra = ${msg.calculateCrcExtra()};\n';
     content += '\n';
     content += 'static const int mavlinkEncodedLength = ${msg.calculateEncodedLength()};\n';
 
     content +='\n';
-    content +='@override int get mavlinkMessageId => _mavlinkMessageId;\n';
+    content +='@override int get mavlinkMessageId => kMavlinkMessageId;\n';
     content +='\n';
     content +='@override int get mavlinkCrcExtra => _mavlinkCrcExtra;\n';
 
