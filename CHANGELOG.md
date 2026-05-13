@@ -8,3 +8,6 @@
 - Added Equatable support to all MAVLink messages.
 - Enabled props for equatable
 - Update ugvcustom dialect using new generator
+
+# 0.2.1
+- Change UGV_SYSTEM_INFO message definition according to the ICD.

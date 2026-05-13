@@ -340,6 +340,29 @@ const UgvSensorErrorBitmask batOverVoltage = 4;
 /// BAT_OVER_TEMP
 const UgvSensorErrorBitmask batOverTemp = 8;
 
+///
+/// Generic subsystem communication and health status.
+/// Used for motor controllers, batteries, PDUs, and other subsystems.
+///
+/// UGV_HEALTH_STATE
+typedef UgvHealthState = int;
+
+/// Reserved state.
+/// RESERVED_STATE
+const UgvHealthState reservedState = 0;
+
+/// No communication with subsystem.
+/// NO_COMMUNICATION_STATE
+const UgvHealthState noCommunicationState = 1;
+
+/// Subsystem communicating and healthy.
+/// COMMUNICATING_HEALTHY_STATE
+const UgvHealthState communicatingHealthyState = 2;
+
+/// Subsystem communicating but unhealthy. Fault present.
+/// FAULT_STATE
+const UgvHealthState faultState = 3;
+
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 /// HEARTBEAT
 class Heartbeat extends Equatable implements MavlinkMessage {
@@ -463,6 +486,94 @@ class Heartbeat extends Equatable implements MavlinkMessage {
         'baseMode: $baseMode, '
         'systemStatus: $systemStatus, '
         'mavlinkVersion: $mavlinkVersion, ';
+  }
+}
+
+/// Sensor and subsystem status information. Provides a compact representation of sensor/subsystem status and a few other basic statistics.
+/// SYS_STATUS
+class SysStatus extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 1;
+
+  static const int _mavlinkCrcExtra = 3;
+
+  static const int mavlinkEncodedLength = 5;
+
+  @override
+  int get mavlinkMessageId => kMavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Battery voltage, UINT16_MAX: Voltage not sent by autopilot
+  /// MAVLink type: uint16_t
+  /// units: mV
+  /// voltage_battery
+  final uint16_t voltageBattery;
+
+  /// Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)
+  /// MAVLink type: uint16_t
+  /// units: c%
+  /// drop_rate_comm
+  final uint16_t dropRateComm;
+
+  /// Battery energy remaining, -1: Battery remaining energy not sent by autopilot
+  /// MAVLink type: int8_t
+  /// units: %
+  /// battery_remaining
+  final int8_t batteryRemaining;
+
+  SysStatus({
+    required this.voltageBattery,
+    required this.dropRateComm,
+    required this.batteryRemaining,
+  });
+
+  SysStatus copyWith({
+    uint16_t? voltageBattery,
+    uint16_t? dropRateComm,
+    int8_t? batteryRemaining,
+  }) {
+    return SysStatus(
+      voltageBattery: voltageBattery ?? this.voltageBattery,
+      dropRateComm: dropRateComm ?? this.dropRateComm,
+      batteryRemaining: batteryRemaining ?? this.batteryRemaining,
+    );
+  }
+
+  factory SysStatus.parse(ByteData data_) {
+    if (data_.lengthInBytes < SysStatus.mavlinkEncodedLength) {
+      var len = SysStatus.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var voltageBattery = data_.getUint16(0, Endian.little);
+    var dropRateComm = data_.getUint16(2, Endian.little);
+    var batteryRemaining = data_.getInt8(4);
+
+    return SysStatus(
+        voltageBattery: voltageBattery,
+        dropRateComm: dropRateComm,
+        batteryRemaining: batteryRemaining);
+  }
+
+  @override
+  List<Object?> get props => [voltageBattery, dropRateComm, batteryRemaining];
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint16(0, voltageBattery, Endian.little);
+    data_.setUint16(2, dropRateComm, Endian.little);
+    data_.setInt8(4, batteryRemaining);
+    return data_;
+  }
+
+  @override
+  String toString() {
+    return 'voltageBattery: $voltageBattery, '
+        'dropRateComm: $dropRateComm, '
+        'batteryRemaining: $batteryRemaining, ';
   }
 }
 
@@ -1248,14 +1359,21 @@ class Timesync extends Equatable implements MavlinkMessage {
   }
 }
 
-/// UGV MASTER HEALTH
+///
+/// Reports subsystem communication and health status of the UGV platform.
+/// Each subsystem uses 2-bit encoding:
+/// 0x01 = No communication
+/// 0x10 = Communicating and healthy
+/// 0x11 = Communicating and unhealthy (fault present)
+/// 0x00 = Reserved
+///
 /// UGV_SYSTEM_INFO
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 38;
+  static const int _mavlinkCrcExtra = 161;
 
-  static const int mavlinkEncodedLength = 34;
+  static const int mavlinkEncodedLength = 9;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1263,115 +1381,97 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// subsystem present
-  /// MAVLink type: uint32_t
-  /// enum: [UgvCompBitmask]
-  /// ugv_subsystem_present
-  final UgvCompBitmask ugvSubsystemPresent;
+  ///
+  /// Packed subsystem health information.
+  ///
+  /// Bit 0-1 : Left Motor Controller Health
+  /// Bit 2-3 : Right Motor Controller Health
+  /// Bit 4-5 : HV Battery Health
+  /// Bit 6-7 : LV Battery Health
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvHealthState]
+  /// subsystem_health_1
+  final UgvHealthState subsystemHealth1;
 
-  /// subsystem enabled
-  /// MAVLink type: uint32_t
-  /// enum: [UgvCompBitmask]
-  /// ugv_subsystem_enabled
-  final UgvCompBitmask ugvSubsystemEnabled;
+  ///
+  /// Bit 0-1 : LV PDU
+  /// Bit 2-3 : DC-DC 48V to 12V
+  /// Bit 4-5 : DC-DC 12V to 5V
+  /// Bit 6-7 : VCU
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvHealthState]
+  /// subsystem_health_2
+  final UgvHealthState subsystemHealth2;
 
-  /// subsystem health
-  /// MAVLink type: uint32_t
-  /// enum: [UgvCompBitmask]
-  /// ugv_subsystem_health
-  final UgvCompBitmask ugvSubsystemHealth;
+  ///
+  /// Bit 0-1 : Front Left Motor
+  /// Bit 2-3 : Front Right Motor
+  /// Bit 4-5 : Rear Left Motor
+  /// Bit 6-7 : Rear Right Motor
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvHealthState]
+  /// subsystem_health_3
+  final UgvHealthState subsystemHealth3;
 
-  /// Compute load (d%)
-  /// MAVLink type: uint16_t
-  /// compute_load
-  final uint16_t computeLoad;
+  ///
+  /// Bit 0-1 : UHF Radio
+  /// Bit 2-3 : LBAND Radio
+  /// Bit 4-5 : Compute
+  /// Bit 6-7 : Reserved
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvHealthState]
+  /// subsystem_health_4
+  final UgvHealthState subsystemHealth4;
 
-  /// System Voltage (mV)
-  /// MAVLink type: uint16_t
-  /// main_voltage
-  final uint16_t mainVoltage;
-
-  /// System Current (cA)
-  /// MAVLink type: int16_t
-  /// main_current
-  final int16_t mainCurrent;
-
-  /// VCU Fault Errors Count
-  /// MAVLink type: uint16_t
-  /// vcu_fault_errors
-  final uint16_t vcuFaultErrors;
-
-  /// Drop Rate (c%)
-  /// MAVLink type: uint16_t
-  /// drop_rate_comm
-  final uint16_t dropRateComm;
-
-  /// Left Motor Errors Count
-  /// MAVLink type: uint16_t
-  /// enum: [UgvMotorErrorBitmask]
-  /// left_motor_errors
-  final UgvMotorErrorBitmask leftMotorErrors;
-
-  /// Right Motor Errors Count
-  /// MAVLink type: uint16_t
-  /// enum: [UgvMotorErrorBitmask]
-  /// right_motor_errors
-  final UgvMotorErrorBitmask rightMotorErrors;
-
-  /// Bitmask indicating BMS errors
-  /// MAVLink type: uint16_t
-  /// enum: [UgvSensorErrorBitmask]
-  /// sensor_bus_errors
-  final UgvSensorErrorBitmask sensorBusErrors;
-
-  /// Remaining Battery (%)
-  /// MAVLink type: int8_t
-  /// battery_remaining
-  final int8_t batteryRemaining;
-
-  /// Current active main mode ID
+  ///
+  /// Current active main mode.
+  ///
   /// MAVLink type: uint8_t
   /// enum: [UgvMainMode]
   /// main_mode
   final UgvMainMode mainMode;
 
-  /// current active sub mode ID
+  ///
+  /// Current active sub mode.
+  ///
   /// MAVLink type: uint8_t
   /// enum: [UgvSubMode]
   /// sub_mode
   final UgvSubMode subMode;
 
-  /// Last main mode commanded by GCS via COMMAND_LONG
+  ///
+  /// Last main mode commanded by GCS.
+  ///
   /// MAVLink type: uint8_t
   /// enum: [UgvMainMode]
   /// intended_main_mode
   final UgvMainMode intendedMainMode;
 
-  /// Last sub mode commanded by GCS via COMMAND_LONG
+  ///
+  /// Last sub mode commanded by GCS.
+  ///
   /// MAVLink type: uint8_t
   /// enum: [UgvSubMode]
   /// intended_sub_mode
   final UgvSubMode intendedSubMode;
 
-  /// Reason for last mode change
+  ///
+  /// Reason for last mode transition.
+  ///
   /// MAVLink type: uint8_t
   /// enum: [ModeChangeReason]
   /// mode_change_reason
   final ModeChangeReason modeChangeReason;
 
   UgvSystemInfo({
-    required this.ugvSubsystemPresent,
-    required this.ugvSubsystemEnabled,
-    required this.ugvSubsystemHealth,
-    required this.computeLoad,
-    required this.mainVoltage,
-    required this.mainCurrent,
-    required this.vcuFaultErrors,
-    required this.dropRateComm,
-    required this.leftMotorErrors,
-    required this.rightMotorErrors,
-    required this.sensorBusErrors,
-    required this.batteryRemaining,
+    required this.subsystemHealth1,
+    required this.subsystemHealth2,
+    required this.subsystemHealth3,
+    required this.subsystemHealth4,
     required this.mainMode,
     required this.subMode,
     required this.intendedMainMode,
@@ -1380,18 +1480,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   });
 
   UgvSystemInfo copyWith({
-    UgvCompBitmask? ugvSubsystemPresent,
-    UgvCompBitmask? ugvSubsystemEnabled,
-    UgvCompBitmask? ugvSubsystemHealth,
-    uint16_t? computeLoad,
-    uint16_t? mainVoltage,
-    int16_t? mainCurrent,
-    uint16_t? vcuFaultErrors,
-    uint16_t? dropRateComm,
-    UgvMotorErrorBitmask? leftMotorErrors,
-    UgvMotorErrorBitmask? rightMotorErrors,
-    UgvSensorErrorBitmask? sensorBusErrors,
-    int8_t? batteryRemaining,
+    UgvHealthState? subsystemHealth1,
+    UgvHealthState? subsystemHealth2,
+    UgvHealthState? subsystemHealth3,
+    UgvHealthState? subsystemHealth4,
     UgvMainMode? mainMode,
     UgvSubMode? subMode,
     UgvMainMode? intendedMainMode,
@@ -1399,18 +1491,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     ModeChangeReason? modeChangeReason,
   }) {
     return UgvSystemInfo(
-      ugvSubsystemPresent: ugvSubsystemPresent ?? this.ugvSubsystemPresent,
-      ugvSubsystemEnabled: ugvSubsystemEnabled ?? this.ugvSubsystemEnabled,
-      ugvSubsystemHealth: ugvSubsystemHealth ?? this.ugvSubsystemHealth,
-      computeLoad: computeLoad ?? this.computeLoad,
-      mainVoltage: mainVoltage ?? this.mainVoltage,
-      mainCurrent: mainCurrent ?? this.mainCurrent,
-      vcuFaultErrors: vcuFaultErrors ?? this.vcuFaultErrors,
-      dropRateComm: dropRateComm ?? this.dropRateComm,
-      leftMotorErrors: leftMotorErrors ?? this.leftMotorErrors,
-      rightMotorErrors: rightMotorErrors ?? this.rightMotorErrors,
-      sensorBusErrors: sensorBusErrors ?? this.sensorBusErrors,
-      batteryRemaining: batteryRemaining ?? this.batteryRemaining,
+      subsystemHealth1: subsystemHealth1 ?? this.subsystemHealth1,
+      subsystemHealth2: subsystemHealth2 ?? this.subsystemHealth2,
+      subsystemHealth3: subsystemHealth3 ?? this.subsystemHealth3,
+      subsystemHealth4: subsystemHealth4 ?? this.subsystemHealth4,
       mainMode: mainMode ?? this.mainMode,
       subMode: subMode ?? this.subMode,
       intendedMainMode: intendedMainMode ?? this.intendedMainMode,
@@ -1426,37 +1510,21 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var ugvSubsystemPresent = data_.getUint32(0, Endian.little);
-    var ugvSubsystemEnabled = data_.getUint32(4, Endian.little);
-    var ugvSubsystemHealth = data_.getUint32(8, Endian.little);
-    var computeLoad = data_.getUint16(12, Endian.little);
-    var mainVoltage = data_.getUint16(14, Endian.little);
-    var mainCurrent = data_.getInt16(16, Endian.little);
-    var vcuFaultErrors = data_.getUint16(18, Endian.little);
-    var dropRateComm = data_.getUint16(20, Endian.little);
-    var leftMotorErrors = data_.getUint16(22, Endian.little);
-    var rightMotorErrors = data_.getUint16(24, Endian.little);
-    var sensorBusErrors = data_.getUint16(26, Endian.little);
-    var batteryRemaining = data_.getInt8(28);
-    var mainMode = data_.getUint8(29);
-    var subMode = data_.getUint8(30);
-    var intendedMainMode = data_.getUint8(31);
-    var intendedSubMode = data_.getUint8(32);
-    var modeChangeReason = data_.getUint8(33);
+    var subsystemHealth1 = data_.getUint8(0);
+    var subsystemHealth2 = data_.getUint8(1);
+    var subsystemHealth3 = data_.getUint8(2);
+    var subsystemHealth4 = data_.getUint8(3);
+    var mainMode = data_.getUint8(4);
+    var subMode = data_.getUint8(5);
+    var intendedMainMode = data_.getUint8(6);
+    var intendedSubMode = data_.getUint8(7);
+    var modeChangeReason = data_.getUint8(8);
 
     return UgvSystemInfo(
-        ugvSubsystemPresent: ugvSubsystemPresent,
-        ugvSubsystemEnabled: ugvSubsystemEnabled,
-        ugvSubsystemHealth: ugvSubsystemHealth,
-        computeLoad: computeLoad,
-        mainVoltage: mainVoltage,
-        mainCurrent: mainCurrent,
-        vcuFaultErrors: vcuFaultErrors,
-        dropRateComm: dropRateComm,
-        leftMotorErrors: leftMotorErrors,
-        rightMotorErrors: rightMotorErrors,
-        sensorBusErrors: sensorBusErrors,
-        batteryRemaining: batteryRemaining,
+        subsystemHealth1: subsystemHealth1,
+        subsystemHealth2: subsystemHealth2,
+        subsystemHealth3: subsystemHealth3,
+        subsystemHealth4: subsystemHealth4,
         mainMode: mainMode,
         subMode: subMode,
         intendedMainMode: intendedMainMode,
@@ -1466,18 +1534,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
 
   @override
   List<Object?> get props => [
-        ugvSubsystemPresent,
-        ugvSubsystemEnabled,
-        ugvSubsystemHealth,
-        computeLoad,
-        mainVoltage,
-        mainCurrent,
-        vcuFaultErrors,
-        dropRateComm,
-        leftMotorErrors,
-        rightMotorErrors,
-        sensorBusErrors,
-        batteryRemaining,
+        subsystemHealth1,
+        subsystemHealth2,
+        subsystemHealth3,
+        subsystemHealth4,
         mainMode,
         subMode,
         intendedMainMode,
@@ -1488,40 +1548,24 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint32(0, ugvSubsystemPresent, Endian.little);
-    data_.setUint32(4, ugvSubsystemEnabled, Endian.little);
-    data_.setUint32(8, ugvSubsystemHealth, Endian.little);
-    data_.setUint16(12, computeLoad, Endian.little);
-    data_.setUint16(14, mainVoltage, Endian.little);
-    data_.setInt16(16, mainCurrent, Endian.little);
-    data_.setUint16(18, vcuFaultErrors, Endian.little);
-    data_.setUint16(20, dropRateComm, Endian.little);
-    data_.setUint16(22, leftMotorErrors, Endian.little);
-    data_.setUint16(24, rightMotorErrors, Endian.little);
-    data_.setUint16(26, sensorBusErrors, Endian.little);
-    data_.setInt8(28, batteryRemaining);
-    data_.setUint8(29, mainMode);
-    data_.setUint8(30, subMode);
-    data_.setUint8(31, intendedMainMode);
-    data_.setUint8(32, intendedSubMode);
-    data_.setUint8(33, modeChangeReason);
+    data_.setUint8(0, subsystemHealth1);
+    data_.setUint8(1, subsystemHealth2);
+    data_.setUint8(2, subsystemHealth3);
+    data_.setUint8(3, subsystemHealth4);
+    data_.setUint8(4, mainMode);
+    data_.setUint8(5, subMode);
+    data_.setUint8(6, intendedMainMode);
+    data_.setUint8(7, intendedSubMode);
+    data_.setUint8(8, modeChangeReason);
     return data_;
   }
 
   @override
   String toString() {
-    return 'ugvSubsystemPresent: $ugvSubsystemPresent, '
-        'ugvSubsystemEnabled: $ugvSubsystemEnabled, '
-        'ugvSubsystemHealth: $ugvSubsystemHealth, '
-        'computeLoad: $computeLoad, '
-        'mainVoltage: $mainVoltage, '
-        'mainCurrent: $mainCurrent, '
-        'vcuFaultErrors: $vcuFaultErrors, '
-        'dropRateComm: $dropRateComm, '
-        'leftMotorErrors: $leftMotorErrors, '
-        'rightMotorErrors: $rightMotorErrors, '
-        'sensorBusErrors: $sensorBusErrors, '
-        'batteryRemaining: $batteryRemaining, '
+    return 'subsystemHealth1: $subsystemHealth1, '
+        'subsystemHealth2: $subsystemHealth2, '
+        'subsystemHealth3: $subsystemHealth3, '
+        'subsystemHealth4: $subsystemHealth4, '
         'mainMode: $mainMode, '
         'subMode: $subMode, '
         'intendedMainMode: $intendedMainMode, '
@@ -1821,6 +1865,141 @@ class UgvSubsystemVersion extends Equatable implements MavlinkMessage {
   }
 }
 
+/// Status generated by radio and injected into MAVLink stream.
+/// RADIO_STATUS
+class RadioStatus extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 109;
+
+  static const int _mavlinkCrcExtra = 185;
+
+  static const int mavlinkEncodedLength = 9;
+
+  @override
+  int get mavlinkMessageId => kMavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Count of radio packet receive errors (since boot).
+  /// MAVLink type: uint16_t
+  /// rxerrors
+  final uint16_t rxerrors;
+
+  /// Count of error corrected radio packets (since boot).
+  /// MAVLink type: uint16_t
+  /// fixed
+  final uint16_t fixed;
+
+  /// Local (message sender) received signal strength indication in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
+  /// MAVLink type: uint8_t
+  /// rssi
+  final uint8_t rssi;
+
+  /// Remote (message receiver) signal strength indication in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
+  /// MAVLink type: uint8_t
+  /// remrssi
+  final uint8_t remrssi;
+
+  /// Remaining free transmitter buffer space.
+  /// MAVLink type: uint8_t
+  /// units: %
+  /// txbuf
+  final uint8_t txbuf;
+
+  /// Local background noise level. These are device dependent RSSI values (scale as approx 2x dB on SiK radios). Values: [0-254], UINT8_MAX: invalid/unknown.
+  /// MAVLink type: uint8_t
+  /// noise
+  final uint8_t noise;
+
+  /// Remote background noise level. These are device dependent RSSI values (scale as approx 2x dB on SiK radios). Values: [0-254], UINT8_MAX: invalid/unknown.
+  /// MAVLink type: uint8_t
+  /// remnoise
+  final uint8_t remnoise;
+
+  RadioStatus({
+    required this.rxerrors,
+    required this.fixed,
+    required this.rssi,
+    required this.remrssi,
+    required this.txbuf,
+    required this.noise,
+    required this.remnoise,
+  });
+
+  RadioStatus copyWith({
+    uint16_t? rxerrors,
+    uint16_t? fixed,
+    uint8_t? rssi,
+    uint8_t? remrssi,
+    uint8_t? txbuf,
+    uint8_t? noise,
+    uint8_t? remnoise,
+  }) {
+    return RadioStatus(
+      rxerrors: rxerrors ?? this.rxerrors,
+      fixed: fixed ?? this.fixed,
+      rssi: rssi ?? this.rssi,
+      remrssi: remrssi ?? this.remrssi,
+      txbuf: txbuf ?? this.txbuf,
+      noise: noise ?? this.noise,
+      remnoise: remnoise ?? this.remnoise,
+    );
+  }
+
+  factory RadioStatus.parse(ByteData data_) {
+    if (data_.lengthInBytes < RadioStatus.mavlinkEncodedLength) {
+      var len = RadioStatus.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var rxerrors = data_.getUint16(0, Endian.little);
+    var fixed = data_.getUint16(2, Endian.little);
+    var rssi = data_.getUint8(4);
+    var remrssi = data_.getUint8(5);
+    var txbuf = data_.getUint8(6);
+    var noise = data_.getUint8(7);
+    var remnoise = data_.getUint8(8);
+
+    return RadioStatus(
+        rxerrors: rxerrors,
+        fixed: fixed,
+        rssi: rssi,
+        remrssi: remrssi,
+        txbuf: txbuf,
+        noise: noise,
+        remnoise: remnoise);
+  }
+
+  @override
+  List<Object?> get props =>
+      [rxerrors, fixed, rssi, remrssi, txbuf, noise, remnoise];
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint16(0, rxerrors, Endian.little);
+    data_.setUint16(2, fixed, Endian.little);
+    data_.setUint8(4, rssi);
+    data_.setUint8(5, remrssi);
+    data_.setUint8(6, txbuf);
+    data_.setUint8(7, noise);
+    data_.setUint8(8, remnoise);
+    return data_;
+  }
+
+  @override
+  String toString() {
+    return 'rxerrors: $rxerrors, '
+        'fixed: $fixed, '
+        'rssi: $rssi, '
+        'remrssi: $remrssi, '
+        'txbuf: $txbuf, '
+        'noise: $noise, '
+        'remnoise: $remnoise, ';
+  }
+}
+
 class MavlinkDialectUgvcustom implements MavlinkDialect {
   static const int mavlinkVersion = 2;
 
@@ -1832,6 +2011,8 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
+      case 1:
+        return SysStatus.parse(data);
       case 2:
         return SystemTime.parse(data);
       case 69:
@@ -1848,6 +2029,8 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
         return UgvComponentVersion.parse(data);
       case 50003:
         return UgvSubsystemVersion.parse(data);
+      case 109:
+        return RadioStatus.parse(data);
       default:
         return null;
     }
@@ -1858,6 +2041,8 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat._mavlinkCrcExtra;
+      case 1:
+        return SysStatus._mavlinkCrcExtra;
       case 2:
         return SystemTime._mavlinkCrcExtra;
       case 69:
@@ -1874,6 +2059,8 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
         return UgvComponentVersion._mavlinkCrcExtra;
       case 50003:
         return UgvSubsystemVersion._mavlinkCrcExtra;
+      case 109:
+        return RadioStatus._mavlinkCrcExtra;
       default:
         return -1;
     }
