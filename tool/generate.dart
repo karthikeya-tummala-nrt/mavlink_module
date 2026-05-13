@@ -626,6 +626,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
   content += "import 'package:mavlink_module/mavlink_dialect.dart';\n";
   content += "import 'package:mavlink_module/mavlink_message.dart';\n";
   content += "import 'package:mavlink_module/types.dart';\n";
+  content += "import 'package:equatable/equatable.dart';\n";
 
   // Write enum fields
   for (var enm in doc.enums) {
@@ -660,7 +661,7 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     content += generateAsDartDocumentation(msg.description);
     // content += '///\n';
     content += '/// ${msg.name}\n';
-    content += 'class ${msg.nameForDart} implements MavlinkMessage {\n';
+    content += 'class ${msg.nameForDart} extends Equatable implements MavlinkMessage {\n';
     content += '\n';
     content += 'static const int kMavlinkMessageId = ${msg.id};\n';
     content += '\n';
@@ -776,6 +777,16 @@ Future<bool> generateCode(String dstPath, String srcDialectPath) async {
     content += ');\n';
     content += '}\n';
     content += '\n';
+
+    // prop getter (needed by equatable)
+    String propFields = [
+      for (var f in msg.orderedFields)
+        f.nameForDart
+    ].join(', ');
+
+    content += '''@override
+  List<Object?> get props => [$propFields]; \n
+''';
 
     // serialize
     content += '''@override

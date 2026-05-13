@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:mavlink_module/mavlink_dialect.dart';
 import 'package:mavlink_module/mavlink_message.dart';
 import 'package:mavlink_module/types.dart';
+import 'package:equatable/equatable.dart';
 
 /// MAVLINK component type reported in HEARTBEAT message. Flight controllers must report the type of the vehicle on which they are mounted (e.g. MAV_TYPE_OCTOROTOR). All other components must report a value appropriate for their type (e.g. a camera must use MAV_TYPE_CAMERA).
 /// MAV_TYPE
@@ -341,15 +342,15 @@ const UgvSensorErrorBitmask batOverTemp = 8;
 
 /// The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html
 /// HEARTBEAT
-class Heartbeat implements MavlinkMessage {
-  static const int _mavlinkMessageId = 0;
+class Heartbeat extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 0;
 
   static const int _mavlinkCrcExtra = 50;
 
   static const int mavlinkEncodedLength = 9;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -439,6 +440,10 @@ class Heartbeat implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props =>
+      [customMode, type, autopilot, baseMode, systemStatus, mavlinkVersion];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint32(0, customMode, Endian.little);
@@ -449,6 +454,16 @@ class Heartbeat implements MavlinkMessage {
     data_.setUint8(8, mavlinkVersion);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'customMode: $customMode, '
+        'type: $type, '
+        'autopilot: $autopilot, '
+        'baseMode: $baseMode, '
+        'systemStatus: $systemStatus, '
+        'mavlinkVersion: $mavlinkVersion, ';
+  }
 }
 
 /// The system time is the time of the sender's master clock.
@@ -457,15 +472,15 @@ class Heartbeat implements MavlinkMessage {
 /// This allows more broadly accurate date stamping of logs, and so on.
 /// If precise time synchronization is needed then use TIMESYNC instead.
 /// SYSTEM_TIME
-class SystemTime implements MavlinkMessage {
-  static const int _mavlinkMessageId = 2;
+class SystemTime extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 2;
 
   static const int _mavlinkCrcExtra = 137;
 
   static const int mavlinkEncodedLength = 12;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -511,26 +526,34 @@ class SystemTime implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [timeUnixUsec, timeBootMs];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint64(0, timeUnixUsec, Endian.little);
     data_.setUint32(8, timeBootMs, Endian.little);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'timeUnixUsec: $timeUnixUsec, ' 'timeBootMs: $timeBootMs, ';
+  }
 }
 
 /// Manual (joystick) control message.
 /// This message represents movement axes and button using standard joystick axes nomenclature. Unused axes can be disabled and buttons states are transmitted as individual on/off bits of a bitmask. For more information see https://mavlink.io/en/services/manual_control.html
 /// MANUAL_CONTROL
-class ManualControl implements MavlinkMessage {
-  static const int _mavlinkMessageId = 69;
+class ManualControl extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 69;
 
   static const int _mavlinkCrcExtra = 96;
 
   static const int mavlinkEncodedLength = 30;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -729,6 +752,26 @@ class ManualControl implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [
+        x,
+        y,
+        z,
+        r,
+        pushButtons,
+        target,
+        tristateToggleSwitches,
+        enabledExtensions,
+        s,
+        t,
+        aux1,
+        aux2,
+        aux3,
+        aux4,
+        aux5,
+        aux6
+      ];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setInt16(0, x, Endian.little);
@@ -749,19 +792,39 @@ class ManualControl implements MavlinkMessage {
     data_.setInt16(28, aux6, Endian.little);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'x: $x, '
+        'y: $y, '
+        'z: $z, '
+        'r: $r, '
+        'pushButtons: $pushButtons, '
+        'target: $target, '
+        'tristateToggleSwitches: $tristateToggleSwitches, '
+        'enabledExtensions: $enabledExtensions, '
+        's: $s, '
+        't: $t, '
+        'aux1: $aux1, '
+        'aux2: $aux2, '
+        'aux3: $aux3, '
+        'aux4: $aux4, '
+        'aux5: $aux5, '
+        'aux6: $aux6, ';
+  }
 }
 
 /// Send a command with up to seven parameters to the MAV. COMMAND_INT is generally preferred when sending MAV_CMD commands that include positional information; it offers higher precision and allows the MAV_FRAME to be specified (which may otherwise be ambiguous, particularly for altitude). The command microservice is documented at https://mavlink.io/en/services/command.html
 /// COMMAND_LONG
-class CommandLong implements MavlinkMessage {
-  static const int _mavlinkMessageId = 76;
+class CommandLong extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 76;
 
   static const int _mavlinkCrcExtra = 152;
 
   static const int mavlinkEncodedLength = 33;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -898,6 +961,21 @@ class CommandLong implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [
+        param1,
+        param2,
+        param3,
+        param4,
+        param5,
+        param6,
+        param7,
+        command,
+        targetSystem,
+        targetComponent,
+        confirmation
+      ];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setFloat32(0, param1, Endian.little);
@@ -913,19 +991,34 @@ class CommandLong implements MavlinkMessage {
     data_.setUint8(32, confirmation);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'param1: $param1, '
+        'param2: $param2, '
+        'param3: $param3, '
+        'param4: $param4, '
+        'param5: $param5, '
+        'param6: $param6, '
+        'param7: $param7, '
+        'command: $command, '
+        'targetSystem: $targetSystem, '
+        'targetComponent: $targetComponent, '
+        'confirmation: $confirmation, ';
+  }
 }
 
 /// Report status of a command. Includes feedback whether the command was executed. The command microservice is documented at https://mavlink.io/en/services/command.html
 /// COMMAND_ACK
-class CommandAck implements MavlinkMessage {
-  static const int _mavlinkMessageId = 77;
+class CommandAck extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 77;
 
   static const int _mavlinkCrcExtra = 143;
 
   static const int mavlinkEncodedLength = 10;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -1018,6 +1111,10 @@ class CommandAck implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props =>
+      [command, result, progress, resultParam2, targetSystem, targetComponent];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint16(0, command, Endian.little);
@@ -1027,6 +1124,16 @@ class CommandAck implements MavlinkMessage {
     data_.setUint8(8, targetSystem);
     data_.setUint8(9, targetComponent);
     return data_;
+  }
+
+  @override
+  String toString() {
+    return 'command: $command, '
+        'result: $result, '
+        'progress: $progress, '
+        'resultParam2: $resultParam2, '
+        'targetSystem: $targetSystem, '
+        'targetComponent: $targetComponent, ';
   }
 }
 
@@ -1042,15 +1149,15 @@ class CommandAck implements MavlinkMessage {
 /// See also: https://mavlink.io/en/services/timesync.html.
 ///
 /// TIMESYNC
-class Timesync implements MavlinkMessage {
-  static const int _mavlinkMessageId = 111;
+class Timesync extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 111;
 
   static const int _mavlinkCrcExtra = 34;
 
   static const int mavlinkEncodedLength = 18;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -1120,6 +1227,9 @@ class Timesync implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [tc1, ts1, targetSystem, targetComponent];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setInt64(0, tc1, Endian.little);
@@ -1128,19 +1238,27 @@ class Timesync implements MavlinkMessage {
     data_.setUint8(17, targetComponent);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'tc1: $tc1, '
+        'ts1: $ts1, '
+        'targetSystem: $targetSystem, '
+        'targetComponent: $targetComponent, ';
+  }
 }
 
 /// UGV MASTER HEALTH
 /// UGV_SYSTEM_INFO
-class UgvSystemInfo implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50001;
+class UgvSystemInfo extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 50001;
 
   static const int _mavlinkCrcExtra = 38;
 
   static const int mavlinkEncodedLength = 34;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -1347,6 +1465,27 @@ class UgvSystemInfo implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [
+        ugvSubsystemPresent,
+        ugvSubsystemEnabled,
+        ugvSubsystemHealth,
+        computeLoad,
+        mainVoltage,
+        mainCurrent,
+        vcuFaultErrors,
+        dropRateComm,
+        leftMotorErrors,
+        rightMotorErrors,
+        sensorBusErrors,
+        batteryRemaining,
+        mainMode,
+        subMode,
+        intendedMainMode,
+        intendedSubMode,
+        modeChangeReason
+      ];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint32(0, ugvSubsystemPresent, Endian.little);
@@ -1368,19 +1507,40 @@ class UgvSystemInfo implements MavlinkMessage {
     data_.setUint8(33, modeChangeReason);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'ugvSubsystemPresent: $ugvSubsystemPresent, '
+        'ugvSubsystemEnabled: $ugvSubsystemEnabled, '
+        'ugvSubsystemHealth: $ugvSubsystemHealth, '
+        'computeLoad: $computeLoad, '
+        'mainVoltage: $mainVoltage, '
+        'mainCurrent: $mainCurrent, '
+        'vcuFaultErrors: $vcuFaultErrors, '
+        'dropRateComm: $dropRateComm, '
+        'leftMotorErrors: $leftMotorErrors, '
+        'rightMotorErrors: $rightMotorErrors, '
+        'sensorBusErrors: $sensorBusErrors, '
+        'batteryRemaining: $batteryRemaining, '
+        'mainMode: $mainMode, '
+        'subMode: $subMode, '
+        'intendedMainMode: $intendedMainMode, '
+        'intendedSubMode: $intendedSubMode, '
+        'modeChangeReason: $modeChangeReason, ';
+  }
 }
 
 /// Describes the current software version along with checksum of the particular component of UGV system.
 /// UGV_COMPONENT_VERSION
-class UgvComponentVersion implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50002;
+class UgvComponentVersion extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 50002;
 
   static const int _mavlinkCrcExtra = 161;
 
   static const int mavlinkEncodedLength = 38;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -1446,6 +1606,10 @@ class UgvComponentVersion implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props =>
+      [softwareVersion, checksum, targetSystem, targetComponent];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint32(0, softwareVersion, Endian.little);
@@ -1454,19 +1618,27 @@ class UgvComponentVersion implements MavlinkMessage {
     data_.setUint8(37, targetComponent);
     return data_;
   }
+
+  @override
+  String toString() {
+    return 'softwareVersion: $softwareVersion, '
+        'checksum: $checksum, '
+        'targetSystem: $targetSystem, '
+        'targetComponent: $targetComponent, ';
+  }
 }
 
 /// Describes the current software version along with checksum of whole UGV system
 /// UGV_SUBSYSTEM_VERSION
-class UgvSubsystemVersion implements MavlinkMessage {
-  static const int _mavlinkMessageId = 50003;
+class UgvSubsystemVersion extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 50003;
 
   static const int _mavlinkCrcExtra = 50;
 
   static const int mavlinkEncodedLength = 181;
 
   @override
-  int get mavlinkMessageId => _mavlinkMessageId;
+  int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
@@ -1602,6 +1774,21 @@ class UgvSubsystemVersion implements MavlinkMessage {
   }
 
   @override
+  List<Object?> get props => [
+        component1Sw,
+        component2Sw,
+        component3Sw,
+        component4Sw,
+        component5Sw,
+        type,
+        component1Checksum,
+        component2Checksum,
+        component3Checksum,
+        component4Checksum,
+        component5Checksum
+      ];
+
+  @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
     data_.setUint32(0, component1Sw, Endian.little);
@@ -1616,6 +1803,21 @@ class UgvSubsystemVersion implements MavlinkMessage {
     MavlinkMessage.setUint8List(data_, 117, component4Checksum);
     MavlinkMessage.setUint8List(data_, 149, component5Checksum);
     return data_;
+  }
+
+  @override
+  String toString() {
+    return 'component1Sw: $component1Sw, '
+        'component2Sw: $component2Sw, '
+        'component3Sw: $component3Sw, '
+        'component4Sw: $component4Sw, '
+        'component5Sw: $component5Sw, '
+        'type: $type, '
+        'component1Checksum: $component1Checksum, '
+        'component2Checksum: $component2Checksum, '
+        'component3Checksum: $component3Checksum, '
+        'component4Checksum: $component4Checksum, '
+        'component5Checksum: $component5Checksum, ';
   }
 }
 
