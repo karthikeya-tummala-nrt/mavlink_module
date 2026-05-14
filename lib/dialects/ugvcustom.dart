@@ -1371,9 +1371,9 @@ class Timesync extends Equatable implements MavlinkMessage {
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 161;
+  static const int _mavlinkCrcExtra = 66;
 
-  static const int mavlinkEncodedLength = 9;
+  static const int mavlinkEncodedLength = 10;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1407,8 +1407,8 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
 
   ///
   /// Bit 0-1 : Front Left Motor
-  /// Bit 2-3 : Front Right Motor
-  /// Bit 4-5 : Rear Left Motor
+  /// Bit 2-3 : Rear Left Motor
+  /// Bit 4-5 : Front Right Motor
   /// Bit 6-7 : Rear Right Motor
   ///
   /// MAVLink type: uint8_t
@@ -1426,6 +1426,13 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// enum: [UgvHealthState]
   /// subsystem_health_4
   final UgvHealthState subsystemHealth4;
+
+  ///
+  /// soc percentage of remaining battery
+  ///
+  /// MAVLink type: uint8_t
+  /// battery_soc
+  final uint8_t batterySoc;
 
   ///
   /// Current active main mode.
@@ -1472,6 +1479,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.subsystemHealth2,
     required this.subsystemHealth3,
     required this.subsystemHealth4,
+    required this.batterySoc,
     required this.mainMode,
     required this.subMode,
     required this.intendedMainMode,
@@ -1484,6 +1492,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     UgvHealthState? subsystemHealth2,
     UgvHealthState? subsystemHealth3,
     UgvHealthState? subsystemHealth4,
+    uint8_t? batterySoc,
     UgvMainMode? mainMode,
     UgvSubMode? subMode,
     UgvMainMode? intendedMainMode,
@@ -1495,6 +1504,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
       subsystemHealth2: subsystemHealth2 ?? this.subsystemHealth2,
       subsystemHealth3: subsystemHealth3 ?? this.subsystemHealth3,
       subsystemHealth4: subsystemHealth4 ?? this.subsystemHealth4,
+      batterySoc: batterySoc ?? this.batterySoc,
       mainMode: mainMode ?? this.mainMode,
       subMode: subMode ?? this.subMode,
       intendedMainMode: intendedMainMode ?? this.intendedMainMode,
@@ -1514,17 +1524,19 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     var subsystemHealth2 = data_.getUint8(1);
     var subsystemHealth3 = data_.getUint8(2);
     var subsystemHealth4 = data_.getUint8(3);
-    var mainMode = data_.getUint8(4);
-    var subMode = data_.getUint8(5);
-    var intendedMainMode = data_.getUint8(6);
-    var intendedSubMode = data_.getUint8(7);
-    var modeChangeReason = data_.getUint8(8);
+    var batterySoc = data_.getUint8(4);
+    var mainMode = data_.getUint8(5);
+    var subMode = data_.getUint8(6);
+    var intendedMainMode = data_.getUint8(7);
+    var intendedSubMode = data_.getUint8(8);
+    var modeChangeReason = data_.getUint8(9);
 
     return UgvSystemInfo(
         subsystemHealth1: subsystemHealth1,
         subsystemHealth2: subsystemHealth2,
         subsystemHealth3: subsystemHealth3,
         subsystemHealth4: subsystemHealth4,
+        batterySoc: batterySoc,
         mainMode: mainMode,
         subMode: subMode,
         intendedMainMode: intendedMainMode,
@@ -1538,6 +1550,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         subsystemHealth2,
         subsystemHealth3,
         subsystemHealth4,
+        batterySoc,
         mainMode,
         subMode,
         intendedMainMode,
@@ -1552,11 +1565,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     data_.setUint8(1, subsystemHealth2);
     data_.setUint8(2, subsystemHealth3);
     data_.setUint8(3, subsystemHealth4);
-    data_.setUint8(4, mainMode);
-    data_.setUint8(5, subMode);
-    data_.setUint8(6, intendedMainMode);
-    data_.setUint8(7, intendedSubMode);
-    data_.setUint8(8, modeChangeReason);
+    data_.setUint8(4, batterySoc);
+    data_.setUint8(5, mainMode);
+    data_.setUint8(6, subMode);
+    data_.setUint8(7, intendedMainMode);
+    data_.setUint8(8, intendedSubMode);
+    data_.setUint8(9, modeChangeReason);
     return data_;
   }
 
@@ -1566,6 +1580,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         'subsystemHealth2: $subsystemHealth2, '
         'subsystemHealth3: $subsystemHealth3, '
         'subsystemHealth4: $subsystemHealth4, '
+        'batterySoc: $batterySoc, '
         'mainMode: $mainMode, '
         'subMode: $subMode, '
         'intendedMainMode: $intendedMainMode, '
