@@ -11,3 +11,9 @@
 
 # 0.2.1
 - Change UGV_SYSTEM_INFO message definition according to the ICD.
+
+# 0.2.2
+- Add Motor and Motor Controller Errors to UGV_SYSTEM_INFO (50001) message.
+- Add snake case to field names in RADIO_STATUS (109) message
+- Fix descriptions and minor typos
+- Update the ugvcustom dialect with new message changes.
