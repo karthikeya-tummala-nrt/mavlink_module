@@ -667,9 +667,9 @@ class SystemTime extends Equatable implements MavlinkMessage {
 class ManualControl extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 69;
 
-  static const int _mavlinkCrcExtra = 96;
+  static const int _mavlinkCrcExtra = 170;
 
-  static const int mavlinkEncodedLength = 30;
+  static const int mavlinkEncodedLength = 34;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -678,14 +678,14 @@ class ManualControl extends Equatable implements MavlinkMessage {
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
   /// X-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to forward(1000)-backward(-1000) movement on a joystick and the pitch of a vehicle.
-  /// MAVLink type: int16_t
+  /// MAVLink type: float
   /// x
-  final int16_t x;
+  final float x;
 
   /// Y-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to left(-1000)-right(1000) movement on a joystick and the roll of a vehicle.
-  /// MAVLink type: int16_t
+  /// MAVLink type: float
   /// y
-  final int16_t y;
+  final float y;
 
   /// Z-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a separate slider movement with maximum being 1000 and minimum being -1000 on a joystick and the thrust of a vehicle. Positive values are positive thrust, negative values are negative thrust.
   /// MAVLink type: int16_t
@@ -789,8 +789,8 @@ class ManualControl extends Equatable implements MavlinkMessage {
   });
 
   ManualControl copyWith({
-    int16_t? x,
-    int16_t? y,
+    float? x,
+    float? y,
     int16_t? z,
     int16_t? r,
     PushButtons? pushButtons,
@@ -834,22 +834,22 @@ class ManualControl extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var x = data_.getInt16(0, Endian.little);
-    var y = data_.getInt16(2, Endian.little);
-    var z = data_.getInt16(4, Endian.little);
-    var r = data_.getInt16(6, Endian.little);
-    var pushButtons = data_.getUint16(8, Endian.little);
-    var target = data_.getUint8(10);
-    var tristateToggleSwitches = data_.getUint16(11, Endian.little);
-    var enabledExtensions = data_.getUint8(13);
-    var s = data_.getInt16(14, Endian.little);
-    var t = data_.getInt16(16, Endian.little);
-    var aux1 = data_.getInt16(18, Endian.little);
-    var aux2 = data_.getInt16(20, Endian.little);
-    var aux3 = data_.getInt16(22, Endian.little);
-    var aux4 = data_.getInt16(24, Endian.little);
-    var aux5 = data_.getInt16(26, Endian.little);
-    var aux6 = data_.getInt16(28, Endian.little);
+    var x = data_.getFloat32(0, Endian.little);
+    var y = data_.getFloat32(4, Endian.little);
+    var z = data_.getInt16(8, Endian.little);
+    var r = data_.getInt16(10, Endian.little);
+    var pushButtons = data_.getUint16(12, Endian.little);
+    var target = data_.getUint8(14);
+    var tristateToggleSwitches = data_.getUint16(15, Endian.little);
+    var enabledExtensions = data_.getUint8(17);
+    var s = data_.getInt16(18, Endian.little);
+    var t = data_.getInt16(20, Endian.little);
+    var aux1 = data_.getInt16(22, Endian.little);
+    var aux2 = data_.getInt16(24, Endian.little);
+    var aux3 = data_.getInt16(26, Endian.little);
+    var aux4 = data_.getInt16(28, Endian.little);
+    var aux5 = data_.getInt16(30, Endian.little);
+    var aux6 = data_.getInt16(32, Endian.little);
 
     return ManualControl(
         x: x,
@@ -893,22 +893,22 @@ class ManualControl extends Equatable implements MavlinkMessage {
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setInt16(0, x, Endian.little);
-    data_.setInt16(2, y, Endian.little);
-    data_.setInt16(4, z, Endian.little);
-    data_.setInt16(6, r, Endian.little);
-    data_.setUint16(8, pushButtons, Endian.little);
-    data_.setUint8(10, target);
-    data_.setUint16(11, tristateToggleSwitches, Endian.little);
-    data_.setUint8(13, enabledExtensions);
-    data_.setInt16(14, s, Endian.little);
-    data_.setInt16(16, t, Endian.little);
-    data_.setInt16(18, aux1, Endian.little);
-    data_.setInt16(20, aux2, Endian.little);
-    data_.setInt16(22, aux3, Endian.little);
-    data_.setInt16(24, aux4, Endian.little);
-    data_.setInt16(26, aux5, Endian.little);
-    data_.setInt16(28, aux6, Endian.little);
+    data_.setFloat32(0, x, Endian.little);
+    data_.setFloat32(4, y, Endian.little);
+    data_.setInt16(8, z, Endian.little);
+    data_.setInt16(10, r, Endian.little);
+    data_.setUint16(12, pushButtons, Endian.little);
+    data_.setUint8(14, target);
+    data_.setUint16(15, tristateToggleSwitches, Endian.little);
+    data_.setUint8(17, enabledExtensions);
+    data_.setInt16(18, s, Endian.little);
+    data_.setInt16(20, t, Endian.little);
+    data_.setInt16(22, aux1, Endian.little);
+    data_.setInt16(24, aux2, Endian.little);
+    data_.setInt16(26, aux3, Endian.little);
+    data_.setInt16(28, aux4, Endian.little);
+    data_.setInt16(30, aux5, Endian.little);
+    data_.setInt16(32, aux6, Endian.little);
     return data_;
   }
 

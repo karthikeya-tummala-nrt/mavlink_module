@@ -17,3 +17,6 @@
 - Add snake case to field names in RADIO_STATUS (109) message
 - Fix descriptions and minor typos
 - Update the ugvcustom dialect with new message changes.
+
+# 0.2.3
+- Change data type of Manual Control X and Y fields to float 
