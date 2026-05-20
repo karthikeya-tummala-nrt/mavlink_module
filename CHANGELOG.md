@@ -20,3 +20,10 @@
 
 # 0.2.3
 - Change data type of Manual Control X and Y fields to float 
+
+# 0.2.4
+- Remove standard MAVLink Dialects (Ardupilot, Common, etc.)
+- Delete examples & tests directories
+- Updated submodule reference to point to new changes
+- Update generator tool input directory to match submodules structure
+- Generator tool now generates only custom dialects. Input directory for the generator is (mavlink/message_definitions/v2.0)
