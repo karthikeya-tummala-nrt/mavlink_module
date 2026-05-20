@@ -27,3 +27,6 @@
 - Updated submodule reference to point to new changes
 - Update generator tool input directory to match submodules structure
 - Generator tool now generates only custom dialects. Input directory for the generator is (mavlink/message_definitions/v2.0)
+
+# 0.2.5
+- Add missing motor controller values and regenerate dialect
