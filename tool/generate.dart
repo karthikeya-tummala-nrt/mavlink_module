@@ -934,7 +934,8 @@ Future<void> runFormatter(String path) async {
 }
 
 void main() async {
-  final dir = await Directory('mavlink/message_definitions/v1.0/').list()
+  // To avoid generating all standard mavlink dialects, keep the custom dialect in the below mentioned folder in a submodule named 'mavlink' or change the directory path according to needs
+  final dir = await Directory('mavlink/message_definitions/v2.0/').list()
     .map((f) => f.path.toString())
     .where((f) =>
       (!f.endsWith('all.xml')) && (!f.contains('test'))
