@@ -1514,9 +1514,9 @@ class Timesync extends Equatable implements MavlinkMessage {
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 34;
+  static const int _mavlinkCrcExtra = 101;
 
-  static const int mavlinkEncodedLength = 16;
+  static const int mavlinkEncodedLength = 20;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1665,6 +1665,26 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// right_mc_faults
   final UgvMotorCtrlError rightMcFaults;
 
+  /// Left Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint8_t
+  /// left_mc_voltage
+  final uint8_t leftMcVoltage;
+
+  /// Right Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint8_t
+  /// right_mc_voltage
+  final uint8_t rightMcVoltage;
+
+  /// Left Motor Controller Temperature (Unit: 1 Degree Celsius)
+  /// MAVLink type: uint8_t
+  /// left_mc_temperature
+  final uint8_t leftMcTemperature;
+
+  /// Right Motor Controller Temperature (Unit: 1 Degree Celsius)
+  /// MAVLink type: uint8_t
+  /// right_mc_temperature
+  final uint8_t rightMcTemperature;
+
   UgvSystemInfo({
     required this.subsystemHealth1,
     required this.subsystemHealth2,
@@ -1682,6 +1702,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.frontRightMotorFaults,
     required this.leftMcFaults,
     required this.rightMcFaults,
+    required this.leftMcVoltage,
+    required this.rightMcVoltage,
+    required this.leftMcTemperature,
+    required this.rightMcTemperature,
   });
 
   UgvSystemInfo copyWith({
@@ -1701,6 +1725,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     UgvMotorError? frontRightMotorFaults,
     UgvMotorCtrlError? leftMcFaults,
     UgvMotorCtrlError? rightMcFaults,
+    uint8_t? leftMcVoltage,
+    uint8_t? rightMcVoltage,
+    uint8_t? leftMcTemperature,
+    uint8_t? rightMcTemperature,
   }) {
     return UgvSystemInfo(
       subsystemHealth1: subsystemHealth1 ?? this.subsystemHealth1,
@@ -1720,6 +1748,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           frontRightMotorFaults ?? this.frontRightMotorFaults,
       leftMcFaults: leftMcFaults ?? this.leftMcFaults,
       rightMcFaults: rightMcFaults ?? this.rightMcFaults,
+      leftMcVoltage: leftMcVoltage ?? this.leftMcVoltage,
+      rightMcVoltage: rightMcVoltage ?? this.rightMcVoltage,
+      leftMcTemperature: leftMcTemperature ?? this.leftMcTemperature,
+      rightMcTemperature: rightMcTemperature ?? this.rightMcTemperature,
     );
   }
 
@@ -1746,6 +1778,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     var frontRightMotorFaults = data_.getUint8(13);
     var leftMcFaults = data_.getUint8(14);
     var rightMcFaults = data_.getUint8(15);
+    var leftMcVoltage = data_.getUint8(16);
+    var rightMcVoltage = data_.getUint8(17);
+    var leftMcTemperature = data_.getUint8(18);
+    var rightMcTemperature = data_.getUint8(19);
 
     return UgvSystemInfo(
         subsystemHealth1: subsystemHealth1,
@@ -1763,7 +1799,11 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         frontLeftMotorFaults: frontLeftMotorFaults,
         frontRightMotorFaults: frontRightMotorFaults,
         leftMcFaults: leftMcFaults,
-        rightMcFaults: rightMcFaults);
+        rightMcFaults: rightMcFaults,
+        leftMcVoltage: leftMcVoltage,
+        rightMcVoltage: rightMcVoltage,
+        leftMcTemperature: leftMcTemperature,
+        rightMcTemperature: rightMcTemperature);
   }
 
   @override
@@ -1783,7 +1823,11 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         frontLeftMotorFaults,
         frontRightMotorFaults,
         leftMcFaults,
-        rightMcFaults
+        rightMcFaults,
+        leftMcVoltage,
+        rightMcVoltage,
+        leftMcTemperature,
+        rightMcTemperature
       ];
 
   @override
@@ -1805,6 +1849,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     data_.setUint8(13, frontRightMotorFaults);
     data_.setUint8(14, leftMcFaults);
     data_.setUint8(15, rightMcFaults);
+    data_.setUint8(16, leftMcVoltage);
+    data_.setUint8(17, rightMcVoltage);
+    data_.setUint8(18, leftMcTemperature);
+    data_.setUint8(19, rightMcTemperature);
     return data_;
   }
 
@@ -1825,7 +1873,11 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         'frontLeftMotorFaults: $frontLeftMotorFaults, '
         'frontRightMotorFaults: $frontRightMotorFaults, '
         'leftMcFaults: $leftMcFaults, '
-        'rightMcFaults: $rightMcFaults, ';
+        'rightMcFaults: $rightMcFaults, '
+        'leftMcVoltage: $leftMcVoltage, '
+        'rightMcVoltage: $rightMcVoltage, '
+        'leftMcTemperature: $leftMcTemperature, '
+        'rightMcTemperature: $rightMcTemperature, ';
   }
 }
 
