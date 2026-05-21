@@ -1,0 +1,3 @@
+[submodule "mavlink_messages"]
+	path = mavlink_messages
+	url = https://github.com/karthikeya-tummala-nrt/mavlink-messages
