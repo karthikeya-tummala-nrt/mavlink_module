@@ -31,7 +31,7 @@
 # 0.2.5
 - Add missing motor controller values and regenerate dialect
 
-#0.2.6
+# 0.2.6
 - Remove forked mavlink submodule
 - Add new submodule containing only XML files for MAVLink messages
 - Update generator tool input directory to match submodules structure
