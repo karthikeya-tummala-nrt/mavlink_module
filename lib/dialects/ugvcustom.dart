@@ -328,6 +328,46 @@ const UgvSubMode none = 0;
 /// HOLD
 const UgvSubMode hold = 10;
 
+/// Speed mode of UGV
+/// UGV_SPEED_MODE
+typedef UgvSpeedMode = int;
+
+/// Reserved
+/// RESERVED
+const UgvSpeedMode reserved = 0;
+
+/// Low Speed
+/// UGV_SPEED_MODE_LOW_SPEED
+const UgvSpeedMode ugvSpeedModeLowSpeed = 1;
+
+/// Medium Speed
+/// UGV_SPEED_MODE_MEDIUM_SPEED
+const UgvSpeedMode ugvSpeedModeMediumSpeed = 2;
+
+/// High Speed
+/// UGV_SPEED_MODE_HIGH_SPEED
+const UgvSpeedMode ugvSpeedModeHighSpeed = 3;
+
+/// Drive mode of UGV
+/// UGV_DRIVE_MODE
+typedef UgvDriveMode = int;
+
+/// Speed Mode
+/// SPEED_MODE
+const UgvDriveMode speedMode = 1;
+
+/// Torque Mode
+/// TORQUE_MODE
+const UgvDriveMode torqueMode = 2;
+
+/// Torque with speed limit
+/// TORQUE_WITH_SPEED_LIMIT
+const UgvDriveMode torqueWithSpeedLimit = 3;
+
+/// Position Mode
+/// POSITION_MODE
+const UgvDriveMode positionMode = 4;
+
 /// Reason for sub-mode change.
 /// MODE_CHANGE_REASON
 typedef ModeChangeReason = int;
@@ -1514,15 +1554,25 @@ class Timesync extends Equatable implements MavlinkMessage {
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 101;
+  static const int _mavlinkCrcExtra = 108;
 
-  static const int mavlinkEncodedLength = 20;
+  static const int mavlinkEncodedLength = 26;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
 
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Left Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint16_t
+  /// left_mc_voltage
+  final uint16_t leftMcVoltage;
+
+  /// Right Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint16_t
+  /// right_mc_voltage
+  final uint16_t rightMcVoltage;
 
   ///
   /// Packed subsystem health information.
@@ -1594,6 +1644,22 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final UgvSubMode subMode;
 
   ///
+  /// Current active speed mode.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvSpeedMode]
+  /// speed_mode
+  final UgvSpeedMode speedMode;
+
+  ///
+  /// Current active drive mode.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvDriveMode]
+  /// drive_mode
+  final UgvDriveMode driveMode;
+
+  ///
   /// Last main mode commanded by GCS.
   ///
   /// MAVLink type: uint8_t
@@ -1608,6 +1674,22 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// enum: [UgvSubMode]
   /// intended_sub_mode
   final UgvSubMode intendedSubMode;
+
+  ///
+  /// Last speed mode commanded by GCS.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvSpeedMode]
+  /// intended_speed_mode
+  final UgvSpeedMode intendedSpeedMode;
+
+  ///
+  /// Last drive mode commanded by GCS.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvDriveMode]
+  /// intended_drive_mode
+  final UgvDriveMode intendedDriveMode;
 
   ///
   /// Reason for last mode transition.
@@ -1665,16 +1747,6 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// right_mc_faults
   final UgvMotorCtrlError rightMcFaults;
 
-  /// Left Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint8_t
-  /// left_mc_voltage
-  final uint8_t leftMcVoltage;
-
-  /// Right Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint8_t
-  /// right_mc_voltage
-  final uint8_t rightMcVoltage;
-
   /// Left Motor Controller Temperature (Unit: 1 Degree Celsius)
   /// MAVLink type: uint8_t
   /// left_mc_temperature
@@ -1686,6 +1758,8 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final uint8_t rightMcTemperature;
 
   UgvSystemInfo({
+    required this.leftMcVoltage,
+    required this.rightMcVoltage,
     required this.subsystemHealth1,
     required this.subsystemHealth2,
     required this.subsystemHealth3,
@@ -1693,8 +1767,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.batterySoc,
     required this.mainMode,
     required this.subMode,
+    required this.speedMode,
+    required this.driveMode,
     required this.intendedMainMode,
     required this.intendedSubMode,
+    required this.intendedSpeedMode,
+    required this.intendedDriveMode,
     required this.modeChangeReason,
     required this.rearLeftMotorFaults,
     required this.rearRightMotorFaults,
@@ -1702,13 +1780,13 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.frontRightMotorFaults,
     required this.leftMcFaults,
     required this.rightMcFaults,
-    required this.leftMcVoltage,
-    required this.rightMcVoltage,
     required this.leftMcTemperature,
     required this.rightMcTemperature,
   });
 
   UgvSystemInfo copyWith({
+    uint16_t? leftMcVoltage,
+    uint16_t? rightMcVoltage,
     UgvHealthState? subsystemHealth1,
     UgvHealthState? subsystemHealth2,
     UgvHealthState? subsystemHealth3,
@@ -1716,8 +1794,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     uint8_t? batterySoc,
     UgvMainMode? mainMode,
     UgvSubMode? subMode,
+    UgvSpeedMode? speedMode,
+    UgvDriveMode? driveMode,
     UgvMainMode? intendedMainMode,
     UgvSubMode? intendedSubMode,
+    UgvSpeedMode? intendedSpeedMode,
+    UgvDriveMode? intendedDriveMode,
     ModeChangeReason? modeChangeReason,
     UgvMotorError? rearLeftMotorFaults,
     UgvMotorError? rearRightMotorFaults,
@@ -1725,12 +1807,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     UgvMotorError? frontRightMotorFaults,
     UgvMotorCtrlError? leftMcFaults,
     UgvMotorCtrlError? rightMcFaults,
-    uint8_t? leftMcVoltage,
-    uint8_t? rightMcVoltage,
     uint8_t? leftMcTemperature,
     uint8_t? rightMcTemperature,
   }) {
     return UgvSystemInfo(
+      leftMcVoltage: leftMcVoltage ?? this.leftMcVoltage,
+      rightMcVoltage: rightMcVoltage ?? this.rightMcVoltage,
       subsystemHealth1: subsystemHealth1 ?? this.subsystemHealth1,
       subsystemHealth2: subsystemHealth2 ?? this.subsystemHealth2,
       subsystemHealth3: subsystemHealth3 ?? this.subsystemHealth3,
@@ -1738,8 +1820,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
       batterySoc: batterySoc ?? this.batterySoc,
       mainMode: mainMode ?? this.mainMode,
       subMode: subMode ?? this.subMode,
+      speedMode: speedMode ?? this.speedMode,
+      driveMode: driveMode ?? this.driveMode,
       intendedMainMode: intendedMainMode ?? this.intendedMainMode,
       intendedSubMode: intendedSubMode ?? this.intendedSubMode,
+      intendedSpeedMode: intendedSpeedMode ?? this.intendedSpeedMode,
+      intendedDriveMode: intendedDriveMode ?? this.intendedDriveMode,
       modeChangeReason: modeChangeReason ?? this.modeChangeReason,
       rearLeftMotorFaults: rearLeftMotorFaults ?? this.rearLeftMotorFaults,
       rearRightMotorFaults: rearRightMotorFaults ?? this.rearRightMotorFaults,
@@ -1748,8 +1834,6 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           frontRightMotorFaults ?? this.frontRightMotorFaults,
       leftMcFaults: leftMcFaults ?? this.leftMcFaults,
       rightMcFaults: rightMcFaults ?? this.rightMcFaults,
-      leftMcVoltage: leftMcVoltage ?? this.leftMcVoltage,
-      rightMcVoltage: rightMcVoltage ?? this.rightMcVoltage,
       leftMcTemperature: leftMcTemperature ?? this.leftMcTemperature,
       rightMcTemperature: rightMcTemperature ?? this.rightMcTemperature,
     );
@@ -1762,28 +1846,34 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var subsystemHealth1 = data_.getUint8(0);
-    var subsystemHealth2 = data_.getUint8(1);
-    var subsystemHealth3 = data_.getUint8(2);
-    var subsystemHealth4 = data_.getUint8(3);
-    var batterySoc = data_.getUint8(4);
-    var mainMode = data_.getUint8(5);
-    var subMode = data_.getUint8(6);
-    var intendedMainMode = data_.getUint8(7);
-    var intendedSubMode = data_.getUint8(8);
-    var modeChangeReason = data_.getUint8(9);
-    var rearLeftMotorFaults = data_.getUint8(10);
-    var rearRightMotorFaults = data_.getUint8(11);
-    var frontLeftMotorFaults = data_.getUint8(12);
-    var frontRightMotorFaults = data_.getUint8(13);
-    var leftMcFaults = data_.getUint8(14);
-    var rightMcFaults = data_.getUint8(15);
-    var leftMcVoltage = data_.getUint8(16);
-    var rightMcVoltage = data_.getUint8(17);
-    var leftMcTemperature = data_.getUint8(18);
-    var rightMcTemperature = data_.getUint8(19);
+    var leftMcVoltage = data_.getUint16(0, Endian.little);
+    var rightMcVoltage = data_.getUint16(2, Endian.little);
+    var subsystemHealth1 = data_.getUint8(4);
+    var subsystemHealth2 = data_.getUint8(5);
+    var subsystemHealth3 = data_.getUint8(6);
+    var subsystemHealth4 = data_.getUint8(7);
+    var batterySoc = data_.getUint8(8);
+    var mainMode = data_.getUint8(9);
+    var subMode = data_.getUint8(10);
+    var speedMode = data_.getUint8(11);
+    var driveMode = data_.getUint8(12);
+    var intendedMainMode = data_.getUint8(13);
+    var intendedSubMode = data_.getUint8(14);
+    var intendedSpeedMode = data_.getUint8(15);
+    var intendedDriveMode = data_.getUint8(16);
+    var modeChangeReason = data_.getUint8(17);
+    var rearLeftMotorFaults = data_.getUint8(18);
+    var rearRightMotorFaults = data_.getUint8(19);
+    var frontLeftMotorFaults = data_.getUint8(20);
+    var frontRightMotorFaults = data_.getUint8(21);
+    var leftMcFaults = data_.getUint8(22);
+    var rightMcFaults = data_.getUint8(23);
+    var leftMcTemperature = data_.getUint8(24);
+    var rightMcTemperature = data_.getUint8(25);
 
     return UgvSystemInfo(
+        leftMcVoltage: leftMcVoltage,
+        rightMcVoltage: rightMcVoltage,
         subsystemHealth1: subsystemHealth1,
         subsystemHealth2: subsystemHealth2,
         subsystemHealth3: subsystemHealth3,
@@ -1791,8 +1881,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         batterySoc: batterySoc,
         mainMode: mainMode,
         subMode: subMode,
+        speedMode: speedMode,
+        driveMode: driveMode,
         intendedMainMode: intendedMainMode,
         intendedSubMode: intendedSubMode,
+        intendedSpeedMode: intendedSpeedMode,
+        intendedDriveMode: intendedDriveMode,
         modeChangeReason: modeChangeReason,
         rearLeftMotorFaults: rearLeftMotorFaults,
         rearRightMotorFaults: rearRightMotorFaults,
@@ -1800,14 +1894,14 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         frontRightMotorFaults: frontRightMotorFaults,
         leftMcFaults: leftMcFaults,
         rightMcFaults: rightMcFaults,
-        leftMcVoltage: leftMcVoltage,
-        rightMcVoltage: rightMcVoltage,
         leftMcTemperature: leftMcTemperature,
         rightMcTemperature: rightMcTemperature);
   }
 
   @override
   List<Object?> get props => [
+        leftMcVoltage,
+        rightMcVoltage,
         subsystemHealth1,
         subsystemHealth2,
         subsystemHealth3,
@@ -1815,8 +1909,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         batterySoc,
         mainMode,
         subMode,
+        speedMode,
+        driveMode,
         intendedMainMode,
         intendedSubMode,
+        intendedSpeedMode,
+        intendedDriveMode,
         modeChangeReason,
         rearLeftMotorFaults,
         rearRightMotorFaults,
@@ -1824,8 +1922,6 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         frontRightMotorFaults,
         leftMcFaults,
         rightMcFaults,
-        leftMcVoltage,
-        rightMcVoltage,
         leftMcTemperature,
         rightMcTemperature
       ];
@@ -1833,40 +1929,50 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, subsystemHealth1);
-    data_.setUint8(1, subsystemHealth2);
-    data_.setUint8(2, subsystemHealth3);
-    data_.setUint8(3, subsystemHealth4);
-    data_.setUint8(4, batterySoc);
-    data_.setUint8(5, mainMode);
-    data_.setUint8(6, subMode);
-    data_.setUint8(7, intendedMainMode);
-    data_.setUint8(8, intendedSubMode);
-    data_.setUint8(9, modeChangeReason);
-    data_.setUint8(10, rearLeftMotorFaults);
-    data_.setUint8(11, rearRightMotorFaults);
-    data_.setUint8(12, frontLeftMotorFaults);
-    data_.setUint8(13, frontRightMotorFaults);
-    data_.setUint8(14, leftMcFaults);
-    data_.setUint8(15, rightMcFaults);
-    data_.setUint8(16, leftMcVoltage);
-    data_.setUint8(17, rightMcVoltage);
-    data_.setUint8(18, leftMcTemperature);
-    data_.setUint8(19, rightMcTemperature);
+    data_.setUint16(0, leftMcVoltage, Endian.little);
+    data_.setUint16(2, rightMcVoltage, Endian.little);
+    data_.setUint8(4, subsystemHealth1);
+    data_.setUint8(5, subsystemHealth2);
+    data_.setUint8(6, subsystemHealth3);
+    data_.setUint8(7, subsystemHealth4);
+    data_.setUint8(8, batterySoc);
+    data_.setUint8(9, mainMode);
+    data_.setUint8(10, subMode);
+    data_.setUint8(11, speedMode);
+    data_.setUint8(12, driveMode);
+    data_.setUint8(13, intendedMainMode);
+    data_.setUint8(14, intendedSubMode);
+    data_.setUint8(15, intendedSpeedMode);
+    data_.setUint8(16, intendedDriveMode);
+    data_.setUint8(17, modeChangeReason);
+    data_.setUint8(18, rearLeftMotorFaults);
+    data_.setUint8(19, rearRightMotorFaults);
+    data_.setUint8(20, frontLeftMotorFaults);
+    data_.setUint8(21, frontRightMotorFaults);
+    data_.setUint8(22, leftMcFaults);
+    data_.setUint8(23, rightMcFaults);
+    data_.setUint8(24, leftMcTemperature);
+    data_.setUint8(25, rightMcTemperature);
     return data_;
   }
 
   @override
   String toString() {
-    return 'subsystemHealth1: $subsystemHealth1, '
+    return 'leftMcVoltage: $leftMcVoltage, '
+        'rightMcVoltage: $rightMcVoltage, '
+        'subsystemHealth1: $subsystemHealth1, '
         'subsystemHealth2: $subsystemHealth2, '
         'subsystemHealth3: $subsystemHealth3, '
         'subsystemHealth4: $subsystemHealth4, '
         'batterySoc: $batterySoc, '
         'mainMode: $mainMode, '
         'subMode: $subMode, '
+        'speedMode: $speedMode, '
+        'driveMode: $driveMode, '
         'intendedMainMode: $intendedMainMode, '
         'intendedSubMode: $intendedSubMode, '
+        'intendedSpeedMode: $intendedSpeedMode, '
+        'intendedDriveMode: $intendedDriveMode, '
         'modeChangeReason: $modeChangeReason, '
         'rearLeftMotorFaults: $rearLeftMotorFaults, '
         'rearRightMotorFaults: $rearRightMotorFaults, '
@@ -1874,8 +1980,6 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         'frontRightMotorFaults: $frontRightMotorFaults, '
         'leftMcFaults: $leftMcFaults, '
         'rightMcFaults: $rightMcFaults, '
-        'leftMcVoltage: $leftMcVoltage, '
-        'rightMcVoltage: $rightMcVoltage, '
         'leftMcTemperature: $leftMcTemperature, '
         'rightMcTemperature: $rightMcTemperature, ';
   }

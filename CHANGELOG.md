@@ -34,4 +34,9 @@
 # 0.2.6
 - Remove forked mavlink submodule
 - Add new submodule containing only XML files for MAVLink messages
-- Update generator tool input directory to match submodules structure
+- Update generator tool input directory to match submodules structure. Input directory for the generator is (mavlink_messages/custom)
+
+# 0.2.7
+- Update submodule tag reference to v0.2.7
+- Submodule updates include added fields to UGV_SYSTEM_INFO message
+- Updated dialect to reflect new XML message definition changes
