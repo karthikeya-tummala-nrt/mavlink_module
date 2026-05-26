@@ -1,6 +1,7 @@
 library mavlink_module;
 
 import 'package:mavlink_module/crc.dart';
+import 'package:mavlink_module/mavlink_signer.dart';
 
 import 'mavlink_version.dart';
 import 'mavlink_message.dart';
@@ -15,23 +16,36 @@ class MavlinkFrame {
   final int systemId;
   final int componentId;
   MavlinkMessage message;
-  MavlinkFrame(this.version, this.sequence, this.systemId, this.componentId, this.message);
+  final MavlinkSigner? signer;
+  final bool signed;
+
+  MavlinkFrame(this.version, this.sequence, this.systemId, this.componentId,
+      this.message,
+      {this.signed = false, this.signer}) : assert(!signed || signer != null, 'signer is required when signed is true');
 
   /// Create MavlinkFrame for MAVLink version1.
-  factory MavlinkFrame.v1(int sequence, int systemId, int componentId, MavlinkMessage message) {
-    return MavlinkFrame(MavlinkVersion.v1, sequence, systemId, componentId, message);
+  factory MavlinkFrame.v1(
+      int sequence, int systemId, int componentId, MavlinkMessage message) {
+    return MavlinkFrame(
+        MavlinkVersion.v1, sequence, systemId, componentId, message);
   }
 
   /// Create MavlinkFrame for MAVLink version2.
-  factory MavlinkFrame.v2(int sequence, int systemId, int componentId, MavlinkMessage message) {
-    return MavlinkFrame(MavlinkVersion.v2, sequence, systemId, componentId, message);
+  factory MavlinkFrame.v2(
+      int sequence, int systemId, int componentId, MavlinkMessage message,
+      {bool signed = false, MavlinkSigner? signer}) {
+    return MavlinkFrame(
+        MavlinkVersion.v2, sequence, systemId, componentId, message, signed: signed, signer: signer);
   }
 
   Uint8List serialize() {
-    if (version == MavlinkVersion.v1) {
-      return _serializeV1();
-    } else {
-      return _serializeV2();
+    switch (version) {
+      case MavlinkVersion.v1:
+        return _serializeV1();
+      case MavlinkVersion.v2:
+        return _serializeV2();
+      default:
+        throw UnsupportedError('Unknown MAVLink message: $version');
     }
   }
 
@@ -76,7 +90,7 @@ class MavlinkFrame {
       throw UnsupportedError('Unexpected MAVLink version($version)');
     }
 
-    int incompatibilityFlags = 0;
+    int incompatibilityFlags = signed ? 0x01 : 0x00;
     int compatibilityFlags = 0;
     var payload = message.serialize();
     var payloadLength = payload.lengthInBytes;
@@ -85,8 +99,9 @@ class MavlinkFrame {
       (message.mavlinkMessageId >> 8) & 0xff,
       (message.mavlinkMessageId >> 16) & 0xff
     ];
+    final signatureLength = MavlinkSigner.signatureLength;
 
-    var bytes = ByteData(12 + payloadLength);
+    var bytes = ByteData(12 + payloadLength + (signed ? signatureLength : 0));
     bytes.setUint8(0, mavlinkStxV2);
     bytes.setUint8(1, payloadLength);
     bytes.setUint8(2, incompatibilityFlags);
@@ -109,15 +124,48 @@ class MavlinkFrame {
     crc.accumulate(messageIdBytes[1]);
     crc.accumulate(messageIdBytes[2]);
 
-    var payloadBytes = payload.buffer.asUint8List();
+    var payloadBytes = payload.buffer.asUint8List(0, payloadLength);
     for (var i = 0; i < payloadLength; i++) {
       bytes.setUint8(10 + i, payloadBytes[i]);
       crc.accumulate(payloadBytes[i]);
     }
     crc.accumulate(message.mavlinkCrcExtra);
 
-    bytes.setUint8(bytes.lengthInBytes - 2, crc.crc & 0xff);
-    bytes.setUint8(bytes.lengthInBytes - 1, (crc.crc >> 8) & 0xff);
+    final crcValue = crc.crc;
+
+    // Little Endian
+    final crcBytes = Uint8List(2)
+      ..[0] = crcValue & 0xFF
+      ..[1] = (crcValue >> 8) & 0xFF;
+
+    final crcOffset = 10 + payloadLength;
+
+    bytes.setUint8(crcOffset, crcBytes[0]);
+    bytes.setUint8(crcOffset + 1, crcBytes[1]);
+
+    final signatureHeader = Uint8List.fromList([
+      mavlinkStxV2,
+      payloadLength,
+      incompatibilityFlags,
+      compatibilityFlags,
+      sequence,
+      systemId,
+      componentId,
+      messageIdBytes[0],
+      messageIdBytes[1],
+      messageIdBytes[2],
+    ]);
+
+    if (signed) {
+      final signature = signer!.signPacket(
+          header: signatureHeader, payload: payloadBytes, crc: crcBytes);
+
+      final offset = 12 + payloadLength;
+
+      for (int i = 0; i < signature.length; i++) {
+        bytes.setUint8(offset + i, signature[i]);
+      }
+    }
 
     return bytes.buffer.asUint8List();
   }

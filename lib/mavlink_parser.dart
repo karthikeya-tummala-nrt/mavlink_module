@@ -3,6 +3,8 @@ library mavlink_module;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:mavlink_module/mavlink_signer.dart';
+
 import 'crc.dart';
 import 'mavlink_dialect.dart';
 import 'mavlink_frame.dart';
@@ -22,13 +24,16 @@ enum _ParserState {
   waitPayloadEnd,
   waitCrcLowByte,
   waitCrcHighByte,
+  waitSignatureEnd,
 }
 
 class MavlinkParser {
   static const _mavlinkMaximumPayloadSize = 255;
   static const _mavlinkIflagSigned = 0x01;
+  static const _mavlinkSignatureLength = 13;
 
   final _streamController = StreamController<MavlinkFrame>();
+  final MavlinkSigner? _signer;
 
   _ParserState _state = _ParserState.init;
 
@@ -47,10 +52,12 @@ class MavlinkParser {
   int _payloadCursor = -1;
   int _crcLowByte = -1;
   int _crcHighByte = -1;
+  final Uint8List _signature = Uint8List(_mavlinkSignatureLength);
+  int _signatureCursor = -1;
 
   final MavlinkDialect _dialect;
 
-  MavlinkParser(this._dialect);
+  MavlinkParser(this._dialect, MavlinkSigner? signer): _signer = signer;
 
   void _resetContext() {
     _version = MavlinkVersion.v1;
@@ -67,6 +74,8 @@ class MavlinkParser {
     _payloadCursor = -1;
     _crcLowByte = -1;
     _crcHighByte = -1;
+    _signatureCursor = -1;
+    _signature.fillRange(0, _mavlinkSignatureLength, 0);
   }
 
   bool _checkCRC() {
@@ -188,19 +197,60 @@ class MavlinkParser {
       case _ParserState.waitCrcHighByte:
         _crcHighByte = d;
 
-        if (_version == MavlinkVersion.v2) {
-          if (_incompatibilityFlags == _mavlinkIflagSigned) {
-            // TODO Handle the Signature bits.
+        if (_version == MavlinkVersion.v2 && (_incompatibilityFlags & _mavlinkIflagSigned) != 0 ) {
+          if (_signer == null) {
+            _resetContext();
+            _state = _ParserState.init;
+            throw AssertionError("Signer must be passed to verify signed messages");
+          }
+          _signatureCursor = 0;
+          _state = _ParserState.waitSignatureEnd;
+        } else {
+          _addMavlinkFrameToStream();
+          _resetContext();
+          _state = _ParserState.init;
+        }
+        break;
+
+      case _ParserState.waitSignatureEnd:
+        _signature[_signatureCursor++] = d;
+
+        if (_signatureCursor == _mavlinkSignatureLength) {
+
+          final signatureHeader = Uint8List.fromList([
+            MavlinkFrame.mavlinkStxV2,
+            _payloadLength,
+            _incompatibilityFlags,
+            _compatibilityFlags,
+            _sequence,
+            _systemId,
+            _componentId,
+            _messageIdLow,
+            _messageIdMiddle,
+            _messageIdHigh,
+          ]);
+
+          final crcBytes = Uint8List(2);
+          crcBytes[0] = _crcLowByte;
+          crcBytes[1] = _crcHighByte;
+
+          if (!_signer!.verifySignature(
+            systemId: _systemId,
+            componentId: _componentId,
+            header: signatureHeader,
+            payload: _payload.sublist(0, _payloadLength),
+            crc: crcBytes,
+            signature: _signature,
+          )) {
             _resetContext();
             _state = _ParserState.init;
             break;
           }
+
+          _addMavlinkFrameToStream();
+          _resetContext();
+          _state = _ParserState.init;
         }
-
-        _addMavlinkFrameToStream();
-
-        _resetContext();
-        _state = _ParserState.init;
         break;
       }
     }
