@@ -40,3 +40,7 @@
 - Update submodule tag reference to v0.2.7
 - Submodule updates include added fields to UGV_SYSTEM_INFO message
 - Updated dialect to reflect new XML message definition changes
+
+# 0.2.8
+- Update submodule tag reference to v0.2.8
+- Updated dialect to reflect new XML message definition changes
