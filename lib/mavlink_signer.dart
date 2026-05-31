@@ -6,23 +6,16 @@ class MavlinkSigner {
   static const int hashLength = 6;
 
   Uint8List secretKey;
-  int linkId;
-  int timestamp;
   final Map<String, int> _lastTimestamps = {};
 
-  MavlinkSigner({required this.secretKey, int? linkId, int? timestamp})
-    : linkId = linkId ?? 0x01,
-      timestamp =
-          timestamp ??
-          DateTime.now()
-                  .toUtc()
-                  .difference(DateTime.utc(2015, 1, 1))
-                  .inMicroseconds ~/ 10; // 10 micro second units
+  MavlinkSigner({required this.secretKey});
 
   Uint8List signPacket({
     required Uint8List header,
     required Uint8List payload,
     required Uint8List crc,
+    required int linkId,
+    required int timestamp,
   }) {
     final signature = Uint8List(signatureLength);
     // First 7 bytes: link ID + low 6 bytes of timestamp
@@ -30,8 +23,6 @@ class MavlinkSigner {
     for (int i = 0; i < 6; i++) {
       signature[i + 1] = (timestamp >> (8 * i)) & 0xFF;
     }
-
-    timestamp++;
 
     // Build SHA256 over: secretKey || header || payload || crc || signature[0..6]
     final digest = sha256.convert([
@@ -58,6 +49,7 @@ class MavlinkSigner {
         100000,
   }) {
     if (signature.length != signatureLength) return false;
+    print("received from remote $signature");
 
     int packetLinkId = signature[0];
     // Extract timestamp (little-endian)
@@ -83,6 +75,7 @@ class MavlinkSigner {
     final streamKey = '$systemId:$componentId:$packetLinkId';
 
     final lastTimestamp = _lastTimestamps[streamKey];
+    print("Sign stream $streamKey & lastTimestamp: $lastTimestamp");
 
     if (lastTimestamp != null &&
         packetTimestamp + timestampWindow10Us < lastTimestamp) {

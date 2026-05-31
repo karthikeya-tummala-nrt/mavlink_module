@@ -197,6 +197,7 @@ class MavlinkParser {
       case _ParserState.waitCrcHighByte:
         _crcHighByte = d;
 
+        print("version $_version incompat ${_incompatibilityFlags}");
         if (_version == MavlinkVersion.v2 && (_incompatibilityFlags & _mavlinkIflagSigned) != 0 ) {
           if (_signer == null) {
             _resetContext();
@@ -234,6 +235,7 @@ class MavlinkParser {
           crcBytes[0] = _crcLowByte;
           crcBytes[1] = _crcHighByte;
 
+          print("calling verifySignature");
           if (!_signer!.verifySignature(
             systemId: _systemId,
             componentId: _componentId,
@@ -242,6 +244,7 @@ class MavlinkParser {
             crc: crcBytes,
             signature: _signature,
           )) {
+            print("Parser: Signature check failed");
             _resetContext();
             _state = _ParserState.init;
             break;
@@ -261,6 +264,7 @@ class MavlinkParser {
     if (!_checkCRC()) {
       // The MAVLink packet is a bad CRC.
       // Ignore the MAVLink packet.
+      print("Parser: CRC Check Failed!!!");
       return false;
     }
 

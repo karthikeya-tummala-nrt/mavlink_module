@@ -18,10 +18,14 @@ class MavlinkFrame {
   MavlinkMessage message;
   final MavlinkSigner? signer;
   final bool signed;
+  final int? linkId;
+  final int? timestamp;
 
   MavlinkFrame(this.version, this.sequence, this.systemId, this.componentId,
       this.message,
-      {this.signed = false, this.signer}) : assert(!signed || signer != null, 'signer is required when signed is true');
+      {this.signed = false, this.signer, this.linkId, this.timestamp})
+      : assert(!signed || (signer != null && linkId != null && timestamp != null),
+            'signer, linkId, and timestamp are required when signed is true');
 
   /// Create MavlinkFrame for MAVLink version1.
   factory MavlinkFrame.v1(
@@ -33,9 +37,13 @@ class MavlinkFrame {
   /// Create MavlinkFrame for MAVLink version2.
   factory MavlinkFrame.v2(
       int sequence, int systemId, int componentId, MavlinkMessage message,
-      {bool signed = false, MavlinkSigner? signer}) {
+      {bool signed = false,
+      MavlinkSigner? signer,
+      int? linkId,
+      int? timestamp}) {
     return MavlinkFrame(
-        MavlinkVersion.v2, sequence, systemId, componentId, message, signed: signed, signer: signer);
+        MavlinkVersion.v2, sequence, systemId, componentId, message,
+        signed: signed, signer: signer, linkId: linkId, timestamp: timestamp);
   }
 
   Uint8List serialize() {
@@ -158,7 +166,12 @@ class MavlinkFrame {
 
     if (signed) {
       final signature = signer!.signPacket(
-          header: signatureHeader, payload: payloadBytes, crc: crcBytes);
+        header: signatureHeader,
+        payload: payloadBytes,
+        crc: crcBytes,
+        linkId: linkId!,
+        timestamp: timestamp!,
+      );
 
       final offset = 12 + payloadLength;
 
