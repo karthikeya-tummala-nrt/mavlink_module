@@ -59,6 +59,14 @@ const MavCmd mavCmdComponentArmDisarm = 400;
 /// MAV_CMD_REQUEST_MESSAGE
 const MavCmd mavCmdRequestMessage = 512;
 
+/// Command to change drive mode of UGV
+/// MAV_CMD_DRIVE_MODE
+const MavCmd mavCmdDriveMode = 31900;
+
+/// Command to change light state of UGV
+/// MAV_CMD_LIGHT_CONTROL
+const MavCmd mavCmdLightControl = 31901;
+
 /// Result from a MAVLink command (MAV_CMD)
 /// MAV_RESULT
 typedef MavResult = int;
@@ -328,45 +336,41 @@ const UgvSubMode none = 0;
 /// HOLD
 const UgvSubMode hold = 10;
 
-/// Speed mode of UGV
+/// Operator speed mode in which the UGV operates in.
 /// UGV_SPEED_MODE
 typedef UgvSpeedMode = int;
 
-/// Reserved
-/// RESERVED
-const UgvSpeedMode reserved = 0;
+/// low speed mode
+/// LOW
+const UgvSpeedMode low = 1;
 
-/// Low Speed
-/// UGV_SPEED_MODE_LOW_SPEED
-const UgvSpeedMode ugvSpeedModeLowSpeed = 1;
+/// medium speed mode
+/// MEDIUM
+const UgvSpeedMode medium = 2;
 
-/// Medium Speed
-/// UGV_SPEED_MODE_MEDIUM_SPEED
-const UgvSpeedMode ugvSpeedModeMediumSpeed = 2;
+/// high speed mode
+/// HIGH
+const UgvSpeedMode high = 3;
 
-/// High Speed
-/// UGV_SPEED_MODE_HIGH_SPEED
-const UgvSpeedMode ugvSpeedModeHighSpeed = 3;
-
-/// Drive mode of UGV
+/// Operator drive mode in which the UGV operates in.
 /// UGV_DRIVE_MODE
 typedef UgvDriveMode = int;
 
-/// Speed Mode
-/// SPEED_MODE
-const UgvDriveMode speedMode = 1;
+/// speed mode
+/// SPEED
+const UgvDriveMode speed = 1;
 
-/// Torque Mode
-/// TORQUE_MODE
-const UgvDriveMode torqueMode = 2;
+/// torque mode
+/// TORQUE
+const UgvDriveMode torque = 2;
 
-/// Torque with speed limit
+/// torque with speed limit mode
 /// TORQUE_WITH_SPEED_LIMIT
 const UgvDriveMode torqueWithSpeedLimit = 3;
 
-/// Position Mode
-/// POSITION_MODE
-const UgvDriveMode positionMode = 4;
+/// position mode
+/// POSITION
+const UgvDriveMode position = 4;
 
 /// Reason for sub-mode change.
 /// MODE_CHANGE_REASON
@@ -537,106 +541,24 @@ class Heartbeat extends Equatable implements MavlinkMessage {
   }
 }
 
-/// Sensor and subsystem status information. Provides a compact representation of sensor/subsystem status and a few other basic statistics.
-/// SYS_STATUS
-class SysStatus extends Equatable implements MavlinkMessage {
-  static const int kMavlinkMessageId = 1;
+///
+/// Time synchronization message.
+/// The message is used for both timesync requests and responses.
+/// The request is sent with `ts1=syncing component timestamp` and `tc1=0`, and may be broadcast or targeted to a specific system/component.
+/// The response is sent with `ts1=syncing component timestamp` (mirror back unchanged), and `tc1=responding component timestamp`, with the `target_system` and `target_component` set to ids of the original request.
+/// Systems can determine if they are receiving a request or response based on the value of `tc`.
+/// If the response has `target_system==target_component==0` the remote system has not been updated to use the component IDs and cannot reliably timesync; the requester may report an error.
+/// Timestamps are UNIX Epoch time or time since system boot in nanoseconds (the timestamp format can be inferred by checking for the magnitude of the number; generally it doesn't matter as only the offset is used).
+/// The message sequence is repeated numerous times with results being filtered/averaged to estimate the offset.
+/// See also: https://mavlink.io/en/services/timesync.html.
+///
+/// TIMESYNC
+class Timesync extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 111;
 
-  static const int _mavlinkCrcExtra = 3;
+  static const int _mavlinkCrcExtra = 34;
 
-  static const int mavlinkEncodedLength = 5;
-
-  @override
-  int get mavlinkMessageId => kMavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// Battery voltage, UINT16_MAX: Voltage not sent by autopilot
-  /// MAVLink type: uint16_t
-  /// units: mV
-  /// voltage_battery
-  final uint16_t voltageBattery;
-
-  /// Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)
-  /// MAVLink type: uint16_t
-  /// units: c%
-  /// drop_rate_comm
-  final uint16_t dropRateComm;
-
-  /// Battery energy remaining, -1: Battery remaining energy not sent by autopilot
-  /// MAVLink type: int8_t
-  /// units: %
-  /// battery_remaining
-  final int8_t batteryRemaining;
-
-  SysStatus({
-    required this.voltageBattery,
-    required this.dropRateComm,
-    required this.batteryRemaining,
-  });
-
-  SysStatus copyWith({
-    uint16_t? voltageBattery,
-    uint16_t? dropRateComm,
-    int8_t? batteryRemaining,
-  }) {
-    return SysStatus(
-      voltageBattery: voltageBattery ?? this.voltageBattery,
-      dropRateComm: dropRateComm ?? this.dropRateComm,
-      batteryRemaining: batteryRemaining ?? this.batteryRemaining,
-    );
-  }
-
-  factory SysStatus.parse(ByteData data_) {
-    if (data_.lengthInBytes < SysStatus.mavlinkEncodedLength) {
-      var len = SysStatus.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var voltageBattery = data_.getUint16(0, Endian.little);
-    var dropRateComm = data_.getUint16(2, Endian.little);
-    var batteryRemaining = data_.getInt8(4);
-
-    return SysStatus(
-        voltageBattery: voltageBattery,
-        dropRateComm: dropRateComm,
-        batteryRemaining: batteryRemaining);
-  }
-
-  @override
-  List<Object?> get props => [voltageBattery, dropRateComm, batteryRemaining];
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint16(0, voltageBattery, Endian.little);
-    data_.setUint16(2, dropRateComm, Endian.little);
-    data_.setInt8(4, batteryRemaining);
-    return data_;
-  }
-
-  @override
-  String toString() {
-    return 'voltageBattery: $voltageBattery, '
-        'dropRateComm: $dropRateComm, '
-        'batteryRemaining: $batteryRemaining, ';
-  }
-}
-
-/// The system time is the time of the sender's master clock.
-/// This can be emitted by flight controllers, onboard computers, or other components in the MAVLink network.
-/// Components that are using a less reliable time source, such as a battery-backed real time clock, can choose to match their system clock to that of a system that indicates a more recent time.
-/// This allows more broadly accurate date stamping of logs, and so on.
-/// If precise time synchronization is needed then use TIMESYNC instead.
-/// SYSTEM_TIME
-class SystemTime extends Equatable implements MavlinkMessage {
-  static const int kMavlinkMessageId = 2;
-
-  static const int _mavlinkCrcExtra = 137;
-
-  static const int mavlinkEncodedLength = 12;
+  static const int mavlinkEncodedLength = 18;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -644,332 +566,89 @@ class SystemTime extends Equatable implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// Timestamp (UNIX epoch time).
-  /// MAVLink type: uint64_t
-  /// units: us
-  /// time_unix_usec
-  final uint64_t timeUnixUsec;
+  /// Time sync timestamp 1. Syncing: 0. Responding: Timestamp of responding component.
+  /// MAVLink type: int64_t
+  /// units: ns
+  /// tc1
+  final int64_t tc1;
 
-  /// Timestamp (time since system boot).
-  /// MAVLink type: uint32_t
-  /// units: ms
-  /// time_boot_ms
-  final uint32_t timeBootMs;
+  /// Time sync timestamp 2. Timestamp of syncing component (mirrored in response).
+  /// MAVLink type: int64_t
+  /// units: ns
+  /// ts1
+  final int64_t ts1;
 
-  SystemTime({
-    required this.timeUnixUsec,
-    required this.timeBootMs,
-  });
-
-  SystemTime copyWith({
-    uint64_t? timeUnixUsec,
-    uint32_t? timeBootMs,
-  }) {
-    return SystemTime(
-      timeUnixUsec: timeUnixUsec ?? this.timeUnixUsec,
-      timeBootMs: timeBootMs ?? this.timeBootMs,
-    );
-  }
-
-  factory SystemTime.parse(ByteData data_) {
-    if (data_.lengthInBytes < SystemTime.mavlinkEncodedLength) {
-      var len = SystemTime.mavlinkEncodedLength - data_.lengthInBytes;
-      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
-          List<int>.filled(len, 0);
-      data_ = Uint8List.fromList(d).buffer.asByteData();
-    }
-    var timeUnixUsec = data_.getUint64(0, Endian.little);
-    var timeBootMs = data_.getUint32(8, Endian.little);
-
-    return SystemTime(timeUnixUsec: timeUnixUsec, timeBootMs: timeBootMs);
-  }
-
-  @override
-  List<Object?> get props => [timeUnixUsec, timeBootMs];
-
-  @override
-  ByteData serialize() {
-    var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint64(0, timeUnixUsec, Endian.little);
-    data_.setUint32(8, timeBootMs, Endian.little);
-    return data_;
-  }
-
-  @override
-  String toString() {
-    return 'timeUnixUsec: $timeUnixUsec, ' 'timeBootMs: $timeBootMs, ';
-  }
-}
-
-/// Manual (joystick) control message.
-/// This message represents movement axes and button using standard joystick axes nomenclature. Unused axes can be disabled and buttons states are transmitted as individual on/off bits of a bitmask. For more information see https://mavlink.io/en/services/manual_control.html
-/// MANUAL_CONTROL
-class ManualControl extends Equatable implements MavlinkMessage {
-  static const int kMavlinkMessageId = 69;
-
-  static const int _mavlinkCrcExtra = 170;
-
-  static const int mavlinkEncodedLength = 34;
-
-  @override
-  int get mavlinkMessageId => kMavlinkMessageId;
-
-  @override
-  int get mavlinkCrcExtra => _mavlinkCrcExtra;
-
-  /// X-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to forward(1000)-backward(-1000) movement on a joystick and the pitch of a vehicle.
-  /// MAVLink type: float
-  /// x
-  final float x;
-
-  /// Y-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to left(-1000)-right(1000) movement on a joystick and the roll of a vehicle.
-  /// MAVLink type: float
-  /// y
-  final float y;
-
-  /// Z-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a separate slider movement with maximum being 1000 and minimum being -1000 on a joystick and the thrust of a vehicle. Positive values are positive thrust, negative values are negative thrust.
-  /// MAVLink type: int16_t
-  /// z
-  final int16_t z;
-
-  /// R-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a twisting of the joystick, with clockwise being 1000 and counter-clockwise being -1000, and the yaw of a vehicle.
-  /// MAVLink type: int16_t
-  /// r
-  final int16_t r;
-
-  /// A bitfield corresponding to the joystick buttons' 0-15 current state, 1 for pressed, 0 for released. The lowest bit corresponds to Button 1.
-  /// MAVLink type: uint16_t
-  /// enum: [PushButtons]
-  /// push_buttons
-  final PushButtons pushButtons;
-
-  /// The system to be controlled.
-  /// MAVLink type: uint8_t
-  /// target
-  final uint8_t target;
-
-  /// A bitfield corresponding to the joystick buttons' 16-31 current state, 1 for pressed, 0 for released. The lowest bit corresponds to Button 16.
-  /// MAVLink type: uint16_t
-  /// enum: [ToggleSwitchPos]
-  /// Extensions field for MAVLink 2.
-  /// tristate_toggle_switches
-  final ToggleSwitchPos tristateToggleSwitches;
-
-  /// Set bits to 1 to indicate which of the following extension fields contain valid data: bit 0: pitch, bit 1: roll, bit 2: aux1, bit 3: aux2, bit 4: aux3, bit 5: aux4, bit 6: aux5, bit 7: aux6
+  /// Target system id. Request: 0 (broadcast) or id of specific system. Response must contain system id of the requesting component.
   /// MAVLink type: uint8_t
   /// Extensions field for MAVLink 2.
-  /// enabled_extensions
-  final uint8_t enabledExtensions;
+  /// target_system
+  final uint8_t targetSystem;
 
-  /// Pitch-only-axis, normalized to the range [-1000,1000]. Generally corresponds to pitch on vehicles with additional degrees of freedom. Valid if bit 0 of enabled_extensions field is set. Set to 0 if invalid.
-  /// MAVLink type: int16_t
+  /// Target component id. Request: 0 (broadcast) or id of specific component. Response must contain component id of the requesting component.
+  /// MAVLink type: uint8_t
   /// Extensions field for MAVLink 2.
-  /// s
-  final int16_t s;
+  /// target_component
+  final uint8_t targetComponent;
 
-  /// Roll-only-axis, normalized to the range [-1000,1000]. Generally corresponds to roll on vehicles with additional degrees of freedom. Valid if bit 1 of enabled_extensions field is set. Set to 0 if invalid.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// t
-  final int16_t t;
-
-  /// Aux continuous input field 1. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 2 of enabled_extensions field is set. 0 if bit 2 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux1
-  final int16_t aux1;
-
-  /// Aux continuous input field 2. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 3 of enabled_extensions field is set. 0 if bit 3 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux2
-  final int16_t aux2;
-
-  /// Aux continuous input field 3. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 4 of enabled_extensions field is set. 0 if bit 4 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux3
-  final int16_t aux3;
-
-  /// Aux continuous input field 4. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 5 of enabled_extensions field is set. 0 if bit 5 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux4
-  final int16_t aux4;
-
-  /// Aux continuous input field 5. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 6 of enabled_extensions field is set. 0 if bit 6 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux5
-  final int16_t aux5;
-
-  /// Aux continuous input field 6. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 7 of enabled_extensions field is set. 0 if bit 7 is unset.
-  /// MAVLink type: int16_t
-  /// Extensions field for MAVLink 2.
-  /// aux6
-  final int16_t aux6;
-
-  ManualControl({
-    required this.x,
-    required this.y,
-    required this.z,
-    required this.r,
-    required this.pushButtons,
-    required this.target,
-    required this.tristateToggleSwitches,
-    required this.enabledExtensions,
-    required this.s,
-    required this.t,
-    required this.aux1,
-    required this.aux2,
-    required this.aux3,
-    required this.aux4,
-    required this.aux5,
-    required this.aux6,
+  Timesync({
+    required this.tc1,
+    required this.ts1,
+    required this.targetSystem,
+    required this.targetComponent,
   });
 
-  ManualControl copyWith({
-    float? x,
-    float? y,
-    int16_t? z,
-    int16_t? r,
-    PushButtons? pushButtons,
-    uint8_t? target,
-    ToggleSwitchPos? tristateToggleSwitches,
-    uint8_t? enabledExtensions,
-    int16_t? s,
-    int16_t? t,
-    int16_t? aux1,
-    int16_t? aux2,
-    int16_t? aux3,
-    int16_t? aux4,
-    int16_t? aux5,
-    int16_t? aux6,
+  Timesync copyWith({
+    int64_t? tc1,
+    int64_t? ts1,
+    uint8_t? targetSystem,
+    uint8_t? targetComponent,
   }) {
-    return ManualControl(
-      x: x ?? this.x,
-      y: y ?? this.y,
-      z: z ?? this.z,
-      r: r ?? this.r,
-      pushButtons: pushButtons ?? this.pushButtons,
-      target: target ?? this.target,
-      tristateToggleSwitches:
-          tristateToggleSwitches ?? this.tristateToggleSwitches,
-      enabledExtensions: enabledExtensions ?? this.enabledExtensions,
-      s: s ?? this.s,
-      t: t ?? this.t,
-      aux1: aux1 ?? this.aux1,
-      aux2: aux2 ?? this.aux2,
-      aux3: aux3 ?? this.aux3,
-      aux4: aux4 ?? this.aux4,
-      aux5: aux5 ?? this.aux5,
-      aux6: aux6 ?? this.aux6,
+    return Timesync(
+      tc1: tc1 ?? this.tc1,
+      ts1: ts1 ?? this.ts1,
+      targetSystem: targetSystem ?? this.targetSystem,
+      targetComponent: targetComponent ?? this.targetComponent,
     );
   }
 
-  factory ManualControl.parse(ByteData data_) {
-    if (data_.lengthInBytes < ManualControl.mavlinkEncodedLength) {
-      var len = ManualControl.mavlinkEncodedLength - data_.lengthInBytes;
+  factory Timesync.parse(ByteData data_) {
+    if (data_.lengthInBytes < Timesync.mavlinkEncodedLength) {
+      var len = Timesync.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var x = data_.getFloat32(0, Endian.little);
-    var y = data_.getFloat32(4, Endian.little);
-    var z = data_.getInt16(8, Endian.little);
-    var r = data_.getInt16(10, Endian.little);
-    var pushButtons = data_.getUint16(12, Endian.little);
-    var target = data_.getUint8(14);
-    var tristateToggleSwitches = data_.getUint16(15, Endian.little);
-    var enabledExtensions = data_.getUint8(17);
-    var s = data_.getInt16(18, Endian.little);
-    var t = data_.getInt16(20, Endian.little);
-    var aux1 = data_.getInt16(22, Endian.little);
-    var aux2 = data_.getInt16(24, Endian.little);
-    var aux3 = data_.getInt16(26, Endian.little);
-    var aux4 = data_.getInt16(28, Endian.little);
-    var aux5 = data_.getInt16(30, Endian.little);
-    var aux6 = data_.getInt16(32, Endian.little);
+    var tc1 = data_.getInt64(0, Endian.little);
+    var ts1 = data_.getInt64(8, Endian.little);
+    var targetSystem = data_.getUint8(16);
+    var targetComponent = data_.getUint8(17);
 
-    return ManualControl(
-        x: x,
-        y: y,
-        z: z,
-        r: r,
-        pushButtons: pushButtons,
-        target: target,
-        tristateToggleSwitches: tristateToggleSwitches,
-        enabledExtensions: enabledExtensions,
-        s: s,
-        t: t,
-        aux1: aux1,
-        aux2: aux2,
-        aux3: aux3,
-        aux4: aux4,
-        aux5: aux5,
-        aux6: aux6);
+    return Timesync(
+        tc1: tc1,
+        ts1: ts1,
+        targetSystem: targetSystem,
+        targetComponent: targetComponent);
   }
 
   @override
-  List<Object?> get props => [
-        x,
-        y,
-        z,
-        r,
-        pushButtons,
-        target,
-        tristateToggleSwitches,
-        enabledExtensions,
-        s,
-        t,
-        aux1,
-        aux2,
-        aux3,
-        aux4,
-        aux5,
-        aux6
-      ];
+  List<Object?> get props => [tc1, ts1, targetSystem, targetComponent];
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setFloat32(0, x, Endian.little);
-    data_.setFloat32(4, y, Endian.little);
-    data_.setInt16(8, z, Endian.little);
-    data_.setInt16(10, r, Endian.little);
-    data_.setUint16(12, pushButtons, Endian.little);
-    data_.setUint8(14, target);
-    data_.setUint16(15, tristateToggleSwitches, Endian.little);
-    data_.setUint8(17, enabledExtensions);
-    data_.setInt16(18, s, Endian.little);
-    data_.setInt16(20, t, Endian.little);
-    data_.setInt16(22, aux1, Endian.little);
-    data_.setInt16(24, aux2, Endian.little);
-    data_.setInt16(26, aux3, Endian.little);
-    data_.setInt16(28, aux4, Endian.little);
-    data_.setInt16(30, aux5, Endian.little);
-    data_.setInt16(32, aux6, Endian.little);
+    data_.setInt64(0, tc1, Endian.little);
+    data_.setInt64(8, ts1, Endian.little);
+    data_.setUint8(16, targetSystem);
+    data_.setUint8(17, targetComponent);
     return data_;
   }
 
   @override
   String toString() {
-    return 'x: $x, '
-        'y: $y, '
-        'z: $z, '
-        'r: $r, '
-        'pushButtons: $pushButtons, '
-        'target: $target, '
-        'tristateToggleSwitches: $tristateToggleSwitches, '
-        'enabledExtensions: $enabledExtensions, '
-        's: $s, '
-        't: $t, '
-        'aux1: $aux1, '
-        'aux2: $aux2, '
-        'aux3: $aux3, '
-        'aux4: $aux4, '
-        'aux5: $aux5, '
-        'aux6: $aux6, ';
+    return 'tc1: $tc1, '
+        'ts1: $ts1, '
+        'targetSystem: $targetSystem, '
+        'targetComponent: $targetComponent, ';
   }
 }
 
@@ -1296,12 +975,268 @@ class CommandAck extends Equatable implements MavlinkMessage {
   }
 }
 
+/// Manual (joystick) control message.
+/// This message represents movement axes and button using standard joystick axes nomenclature. Unused axes can be disabled and buttons states are transmitted as individual on/off bits of a bitmask. For more information see https://mavlink.io/en/services/manual_control.html
+/// MANUAL_CONTROL
+class ManualControl extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 69;
+
+  static const int _mavlinkCrcExtra = 96;
+
+  static const int mavlinkEncodedLength = 28;
+
+  @override
+  int get mavlinkMessageId => kMavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// X-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to forward(1000)-backward(-1000) movement on a joystick and the pitch of a vehicle.
+  /// MAVLink type: int16_t
+  /// x
+  final int16_t x;
+
+  /// Y-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to left(-1000)-right(1000) movement on a joystick and the roll of a vehicle.
+  /// MAVLink type: int16_t
+  /// y
+  final int16_t y;
+
+  /// Z-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a separate slider movement with maximum being 1000 and minimum being -1000 on a joystick and the thrust of a vehicle. Positive values are positive thrust, negative values are negative thrust.
+  /// MAVLink type: int16_t
+  /// z
+  final int16_t z;
+
+  /// R-axis, normalized to the range [-1000,1000]. A value of INT16_MAX indicates that this axis is invalid. Generally corresponds to a twisting of the joystick, with clockwise being 1000 and counter-clockwise being -1000, and the yaw of a vehicle.
+  /// MAVLink type: int16_t
+  /// r
+  final int16_t r;
+
+  /// A bitfield corresponding to the joystick buttons' 0-15 current state, 1 for pressed, 0 for released. The lowest bit corresponds to Button 1.
+  /// MAVLink type: uint16_t
+  /// enum: [PushButtons]
+  /// push_buttons
+  final PushButtons pushButtons;
+
+  /// The system to be controlled.
+  /// MAVLink type: uint8_t
+  /// target
+  final uint8_t target;
+
+  /// Set bits to 1 to indicate which of the following extension fields contain valid data: bit 0: pitch, bit 1: roll, bit 2: aux1, bit 3: aux2, bit 4: aux3, bit 5: aux4, bit 6: aux5, bit 7: aux6
+  /// MAVLink type: uint8_t
+  /// Extensions field for MAVLink 2.
+  /// enabled_extensions
+  final uint8_t enabledExtensions;
+
+  /// Pitch-only-axis, normalized to the range [-1000,1000]. Generally corresponds to pitch on vehicles with additional degrees of freedom. Valid if bit 0 of enabled_extensions field is set. Set to 0 if invalid.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// s
+  final int16_t s;
+
+  /// Roll-only-axis, normalized to the range [-1000,1000]. Generally corresponds to roll on vehicles with additional degrees of freedom. Valid if bit 1 of enabled_extensions field is set. Set to 0 if invalid.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// t
+  final int16_t t;
+
+  /// Aux continuous input field 1. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 2 of enabled_extensions field is set. 0 if bit 2 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux1
+  final int16_t aux1;
+
+  /// Aux continuous input field 2. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 3 of enabled_extensions field is set. 0 if bit 3 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux2
+  final int16_t aux2;
+
+  /// Aux continuous input field 3. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 4 of enabled_extensions field is set. 0 if bit 4 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux3
+  final int16_t aux3;
+
+  /// Aux continuous input field 4. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 5 of enabled_extensions field is set. 0 if bit 5 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux4
+  final int16_t aux4;
+
+  /// Aux continuous input field 5. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 6 of enabled_extensions field is set. 0 if bit 6 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux5
+  final int16_t aux5;
+
+  /// Aux continuous input field 6. Normalized in the range [-1000,1000]. Purpose defined by recipient. Valid data if bit 7 of enabled_extensions field is set. 0 if bit 7 is unset.
+  /// MAVLink type: int16_t
+  /// Extensions field for MAVLink 2.
+  /// aux6
+  final int16_t aux6;
+
+  ManualControl({
+    required this.x,
+    required this.y,
+    required this.z,
+    required this.r,
+    required this.pushButtons,
+    required this.target,
+    required this.enabledExtensions,
+    required this.s,
+    required this.t,
+    required this.aux1,
+    required this.aux2,
+    required this.aux3,
+    required this.aux4,
+    required this.aux5,
+    required this.aux6,
+  });
+
+  ManualControl copyWith({
+    int16_t? x,
+    int16_t? y,
+    int16_t? z,
+    int16_t? r,
+    PushButtons? pushButtons,
+    uint8_t? target,
+    uint8_t? enabledExtensions,
+    int16_t? s,
+    int16_t? t,
+    int16_t? aux1,
+    int16_t? aux2,
+    int16_t? aux3,
+    int16_t? aux4,
+    int16_t? aux5,
+    int16_t? aux6,
+  }) {
+    return ManualControl(
+      x: x ?? this.x,
+      y: y ?? this.y,
+      z: z ?? this.z,
+      r: r ?? this.r,
+      pushButtons: pushButtons ?? this.pushButtons,
+      target: target ?? this.target,
+      enabledExtensions: enabledExtensions ?? this.enabledExtensions,
+      s: s ?? this.s,
+      t: t ?? this.t,
+      aux1: aux1 ?? this.aux1,
+      aux2: aux2 ?? this.aux2,
+      aux3: aux3 ?? this.aux3,
+      aux4: aux4 ?? this.aux4,
+      aux5: aux5 ?? this.aux5,
+      aux6: aux6 ?? this.aux6,
+    );
+  }
+
+  factory ManualControl.parse(ByteData data_) {
+    if (data_.lengthInBytes < ManualControl.mavlinkEncodedLength) {
+      var len = ManualControl.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var x = data_.getInt16(0, Endian.little);
+    var y = data_.getInt16(2, Endian.little);
+    var z = data_.getInt16(4, Endian.little);
+    var r = data_.getInt16(6, Endian.little);
+    var pushButtons = data_.getUint16(8, Endian.little);
+    var target = data_.getUint8(10);
+    var enabledExtensions = data_.getUint8(11);
+    var s = data_.getInt16(12, Endian.little);
+    var t = data_.getInt16(14, Endian.little);
+    var aux1 = data_.getInt16(16, Endian.little);
+    var aux2 = data_.getInt16(18, Endian.little);
+    var aux3 = data_.getInt16(20, Endian.little);
+    var aux4 = data_.getInt16(22, Endian.little);
+    var aux5 = data_.getInt16(24, Endian.little);
+    var aux6 = data_.getInt16(26, Endian.little);
+
+    return ManualControl(
+        x: x,
+        y: y,
+        z: z,
+        r: r,
+        pushButtons: pushButtons,
+        target: target,
+        enabledExtensions: enabledExtensions,
+        s: s,
+        t: t,
+        aux1: aux1,
+        aux2: aux2,
+        aux3: aux3,
+        aux4: aux4,
+        aux5: aux5,
+        aux6: aux6);
+  }
+
+  @override
+  List<Object?> get props => [
+        x,
+        y,
+        z,
+        r,
+        pushButtons,
+        target,
+        enabledExtensions,
+        s,
+        t,
+        aux1,
+        aux2,
+        aux3,
+        aux4,
+        aux5,
+        aux6
+      ];
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setInt16(0, x, Endian.little);
+    data_.setInt16(2, y, Endian.little);
+    data_.setInt16(4, z, Endian.little);
+    data_.setInt16(6, r, Endian.little);
+    data_.setUint16(8, pushButtons, Endian.little);
+    data_.setUint8(10, target);
+    data_.setUint8(11, enabledExtensions);
+    data_.setInt16(12, s, Endian.little);
+    data_.setInt16(14, t, Endian.little);
+    data_.setInt16(16, aux1, Endian.little);
+    data_.setInt16(18, aux2, Endian.little);
+    data_.setInt16(20, aux3, Endian.little);
+    data_.setInt16(22, aux4, Endian.little);
+    data_.setInt16(24, aux5, Endian.little);
+    data_.setInt16(26, aux6, Endian.little);
+    return data_;
+  }
+
+  @override
+  String toString() {
+    return 'x: $x, '
+        'y: $y, '
+        'z: $z, '
+        'r: $r, '
+        'pushButtons: $pushButtons, '
+        'target: $target, '
+        'enabledExtensions: $enabledExtensions, '
+        's: $s, '
+        't: $t, '
+        'aux1: $aux1, '
+        'aux2: $aux2, '
+        'aux3: $aux3, '
+        'aux4: $aux4, '
+        'aux5: $aux5, '
+        'aux6: $aux6, ';
+  }
+}
+
 /// Status generated by radio and injected into MAVLink stream.
 /// RADIO_STATUS
 class RadioStatus extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 109;
 
-  static const int _mavlinkCrcExtra = 173;
+  static const int _mavlinkCrcExtra = 185;
 
   static const int mavlinkEncodedLength = 9;
 
@@ -1313,8 +1248,8 @@ class RadioStatus extends Equatable implements MavlinkMessage {
 
   /// Count of radio packet receive errors (since boot).
   /// MAVLink type: uint16_t
-  /// rx_errors
-  final uint16_t rxErrors;
+  /// rxerrors
+  final uint16_t rxerrors;
 
   /// Count of error corrected radio packets (since boot).
   /// MAVLink type: uint16_t
@@ -1328,14 +1263,14 @@ class RadioStatus extends Equatable implements MavlinkMessage {
 
   /// Remote (message receiver) signal strength indication in device-dependent units/scale. Values: [0-254], UINT8_MAX: invalid/unknown.
   /// MAVLink type: uint8_t
-  /// rem_rssi
-  final uint8_t remRssi;
+  /// remrssi
+  final uint8_t remrssi;
 
   /// Remaining free transmitter buffer space.
   /// MAVLink type: uint8_t
   /// units: %
-  /// tx_buf
-  final uint8_t txBuf;
+  /// txbuf
+  final uint8_t txbuf;
 
   /// Local background noise level. These are device dependent RSSI values (scale as approx 2x dB on SiK radios). Values: [0-254], UINT8_MAX: invalid/unknown.
   /// MAVLink type: uint8_t
@@ -1344,36 +1279,36 @@ class RadioStatus extends Equatable implements MavlinkMessage {
 
   /// Remote background noise level. These are device dependent RSSI values (scale as approx 2x dB on SiK radios). Values: [0-254], UINT8_MAX: invalid/unknown.
   /// MAVLink type: uint8_t
-  /// rem_noise
-  final uint8_t remNoise;
+  /// remnoise
+  final uint8_t remnoise;
 
   RadioStatus({
-    required this.rxErrors,
+    required this.rxerrors,
     required this.fixed,
     required this.rssi,
-    required this.remRssi,
-    required this.txBuf,
+    required this.remrssi,
+    required this.txbuf,
     required this.noise,
-    required this.remNoise,
+    required this.remnoise,
   });
 
   RadioStatus copyWith({
-    uint16_t? rxErrors,
+    uint16_t? rxerrors,
     uint16_t? fixed,
     uint8_t? rssi,
-    uint8_t? remRssi,
-    uint8_t? txBuf,
+    uint8_t? remrssi,
+    uint8_t? txbuf,
     uint8_t? noise,
-    uint8_t? remNoise,
+    uint8_t? remnoise,
   }) {
     return RadioStatus(
-      rxErrors: rxErrors ?? this.rxErrors,
+      rxerrors: rxerrors ?? this.rxerrors,
       fixed: fixed ?? this.fixed,
       rssi: rssi ?? this.rssi,
-      remRssi: remRssi ?? this.remRssi,
-      txBuf: txBuf ?? this.txBuf,
+      remrssi: remrssi ?? this.remrssi,
+      txbuf: txbuf ?? this.txbuf,
       noise: noise ?? this.noise,
-      remNoise: remNoise ?? this.remNoise,
+      remnoise: remnoise ?? this.remnoise,
     );
   }
 
@@ -1384,71 +1319,61 @@ class RadioStatus extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var rxErrors = data_.getUint16(0, Endian.little);
+    var rxerrors = data_.getUint16(0, Endian.little);
     var fixed = data_.getUint16(2, Endian.little);
     var rssi = data_.getUint8(4);
-    var remRssi = data_.getUint8(5);
-    var txBuf = data_.getUint8(6);
+    var remrssi = data_.getUint8(5);
+    var txbuf = data_.getUint8(6);
     var noise = data_.getUint8(7);
-    var remNoise = data_.getUint8(8);
+    var remnoise = data_.getUint8(8);
 
     return RadioStatus(
-        rxErrors: rxErrors,
+        rxerrors: rxerrors,
         fixed: fixed,
         rssi: rssi,
-        remRssi: remRssi,
-        txBuf: txBuf,
+        remrssi: remrssi,
+        txbuf: txbuf,
         noise: noise,
-        remNoise: remNoise);
+        remnoise: remnoise);
   }
 
   @override
   List<Object?> get props =>
-      [rxErrors, fixed, rssi, remRssi, txBuf, noise, remNoise];
+      [rxerrors, fixed, rssi, remrssi, txbuf, noise, remnoise];
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint16(0, rxErrors, Endian.little);
+    data_.setUint16(0, rxerrors, Endian.little);
     data_.setUint16(2, fixed, Endian.little);
     data_.setUint8(4, rssi);
-    data_.setUint8(5, remRssi);
-    data_.setUint8(6, txBuf);
+    data_.setUint8(5, remrssi);
+    data_.setUint8(6, txbuf);
     data_.setUint8(7, noise);
-    data_.setUint8(8, remNoise);
+    data_.setUint8(8, remnoise);
     return data_;
   }
 
   @override
   String toString() {
-    return 'rxErrors: $rxErrors, '
+    return 'rxerrors: $rxerrors, '
         'fixed: $fixed, '
         'rssi: $rssi, '
-        'remRssi: $remRssi, '
-        'txBuf: $txBuf, '
+        'remrssi: $remrssi, '
+        'txbuf: $txbuf, '
         'noise: $noise, '
-        'remNoise: $remNoise, ';
+        'remnoise: $remnoise, ';
   }
 }
 
-///
-/// Time synchronization message.
-/// The message is used for both timesync requests and responses.
-/// The request is sent with `ts1=syncing component timestamp` and `tc1=0`, and may be broadcast or targeted to a specific system/component.
-/// The response is sent with `ts1=syncing component timestamp` (mirror back unchanged), and `tc1=responding component timestamp`, with the `target_system` and `target_component` set to ids of the original request.
-/// Systems can determine if they are receiving a request or response based on the value of `tc`.
-/// If the response has `target_system==target_component==0` the remote system has not been updated to use the component IDs and cannot reliably timesync; the requester may report an error.
-/// Timestamps are UNIX Epoch time or time since system boot in nanoseconds (the timestamp format can be inferred by checking for the magnitude of the number; generally it doesn't matter as only the offset is used).
-/// The message sequence is repeated numerous times with results being filtered/averaged to estimate the offset.
-/// See also: https://mavlink.io/en/services/timesync.html.
-///
-/// TIMESYNC
-class Timesync extends Equatable implements MavlinkMessage {
-  static const int kMavlinkMessageId = 111;
+/// Sensor and subsystem status information. Provides a compact representation of sensor/subsystem status and a few other basic statistics.
+/// SYS_STATUS
+class SysStatus extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 1;
 
-  static const int _mavlinkCrcExtra = 34;
+  static const int _mavlinkCrcExtra = 3;
 
-  static const int mavlinkEncodedLength = 18;
+  static const int mavlinkEncodedLength = 5;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1456,89 +1381,152 @@ class Timesync extends Equatable implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// Time sync timestamp 1. Syncing: 0. Responding: Timestamp of responding component.
-  /// MAVLink type: int64_t
-  /// units: ns
-  /// tc1
-  final int64_t tc1;
+  /// Battery voltage, UINT16_MAX: Voltage not sent by autopilot
+  /// MAVLink type: uint16_t
+  /// units: mV
+  /// voltage_battery
+  final uint16_t voltageBattery;
 
-  /// Time sync timestamp 2. Timestamp of syncing component (mirrored in response).
-  /// MAVLink type: int64_t
-  /// units: ns
-  /// ts1
-  final int64_t ts1;
+  /// Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)
+  /// MAVLink type: uint16_t
+  /// units: c%
+  /// drop_rate_comm
+  final uint16_t dropRateComm;
 
-  /// Target system id. Request: 0 (broadcast) or id of specific system. Response must contain system id of the requesting component.
-  /// MAVLink type: uint8_t
-  /// Extensions field for MAVLink 2.
-  /// target_system
-  final uint8_t targetSystem;
+  /// Battery energy remaining, -1: Battery remaining energy not sent by autopilot
+  /// MAVLink type: int8_t
+  /// units: %
+  /// battery_remaining
+  final int8_t batteryRemaining;
 
-  /// Target component id. Request: 0 (broadcast) or id of specific component. Response must contain component id of the requesting component.
-  /// MAVLink type: uint8_t
-  /// Extensions field for MAVLink 2.
-  /// target_component
-  final uint8_t targetComponent;
-
-  Timesync({
-    required this.tc1,
-    required this.ts1,
-    required this.targetSystem,
-    required this.targetComponent,
+  SysStatus({
+    required this.voltageBattery,
+    required this.dropRateComm,
+    required this.batteryRemaining,
   });
 
-  Timesync copyWith({
-    int64_t? tc1,
-    int64_t? ts1,
-    uint8_t? targetSystem,
-    uint8_t? targetComponent,
+  SysStatus copyWith({
+    uint16_t? voltageBattery,
+    uint16_t? dropRateComm,
+    int8_t? batteryRemaining,
   }) {
-    return Timesync(
-      tc1: tc1 ?? this.tc1,
-      ts1: ts1 ?? this.ts1,
-      targetSystem: targetSystem ?? this.targetSystem,
-      targetComponent: targetComponent ?? this.targetComponent,
+    return SysStatus(
+      voltageBattery: voltageBattery ?? this.voltageBattery,
+      dropRateComm: dropRateComm ?? this.dropRateComm,
+      batteryRemaining: batteryRemaining ?? this.batteryRemaining,
     );
   }
 
-  factory Timesync.parse(ByteData data_) {
-    if (data_.lengthInBytes < Timesync.mavlinkEncodedLength) {
-      var len = Timesync.mavlinkEncodedLength - data_.lengthInBytes;
+  factory SysStatus.parse(ByteData data_) {
+    if (data_.lengthInBytes < SysStatus.mavlinkEncodedLength) {
+      var len = SysStatus.mavlinkEncodedLength - data_.lengthInBytes;
       var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var tc1 = data_.getInt64(0, Endian.little);
-    var ts1 = data_.getInt64(8, Endian.little);
-    var targetSystem = data_.getUint8(16);
-    var targetComponent = data_.getUint8(17);
+    var voltageBattery = data_.getUint16(0, Endian.little);
+    var dropRateComm = data_.getUint16(2, Endian.little);
+    var batteryRemaining = data_.getInt8(4);
 
-    return Timesync(
-        tc1: tc1,
-        ts1: ts1,
-        targetSystem: targetSystem,
-        targetComponent: targetComponent);
+    return SysStatus(
+        voltageBattery: voltageBattery,
+        dropRateComm: dropRateComm,
+        batteryRemaining: batteryRemaining);
   }
 
   @override
-  List<Object?> get props => [tc1, ts1, targetSystem, targetComponent];
+  List<Object?> get props => [voltageBattery, dropRateComm, batteryRemaining];
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setInt64(0, tc1, Endian.little);
-    data_.setInt64(8, ts1, Endian.little);
-    data_.setUint8(16, targetSystem);
-    data_.setUint8(17, targetComponent);
+    data_.setUint16(0, voltageBattery, Endian.little);
+    data_.setUint16(2, dropRateComm, Endian.little);
+    data_.setInt8(4, batteryRemaining);
     return data_;
   }
 
   @override
   String toString() {
-    return 'tc1: $tc1, '
-        'ts1: $ts1, '
-        'targetSystem: $targetSystem, '
-        'targetComponent: $targetComponent, ';
+    return 'voltageBattery: $voltageBattery, '
+        'dropRateComm: $dropRateComm, '
+        'batteryRemaining: $batteryRemaining, ';
+  }
+}
+
+/// The system time is the time of the sender's master clock.
+/// This can be emitted by flight controllers, onboard computers, or other components in the MAVLink network.
+/// Components that are using a less reliable time source, such as a battery-backed real time clock, can choose to match their system clock to that of a system that indicates a more recent time.
+/// This allows more broadly accurate date stamping of logs, and so on.
+/// If precise time synchronization is needed then use TIMESYNC instead.
+/// SYSTEM_TIME
+class SystemTime extends Equatable implements MavlinkMessage {
+  static const int kMavlinkMessageId = 2;
+
+  static const int _mavlinkCrcExtra = 137;
+
+  static const int mavlinkEncodedLength = 12;
+
+  @override
+  int get mavlinkMessageId => kMavlinkMessageId;
+
+  @override
+  int get mavlinkCrcExtra => _mavlinkCrcExtra;
+
+  /// Timestamp (UNIX epoch time).
+  /// MAVLink type: uint64_t
+  /// units: us
+  /// time_unix_usec
+  final uint64_t timeUnixUsec;
+
+  /// Timestamp (time since system boot).
+  /// MAVLink type: uint32_t
+  /// units: ms
+  /// time_boot_ms
+  final uint32_t timeBootMs;
+
+  SystemTime({
+    required this.timeUnixUsec,
+    required this.timeBootMs,
+  });
+
+  SystemTime copyWith({
+    uint64_t? timeUnixUsec,
+    uint32_t? timeBootMs,
+  }) {
+    return SystemTime(
+      timeUnixUsec: timeUnixUsec ?? this.timeUnixUsec,
+      timeBootMs: timeBootMs ?? this.timeBootMs,
+    );
+  }
+
+  factory SystemTime.parse(ByteData data_) {
+    if (data_.lengthInBytes < SystemTime.mavlinkEncodedLength) {
+      var len = SystemTime.mavlinkEncodedLength - data_.lengthInBytes;
+      var d = data_.buffer.asUint8List().sublist(0, data_.lengthInBytes) +
+          List<int>.filled(len, 0);
+      data_ = Uint8List.fromList(d).buffer.asByteData();
+    }
+    var timeUnixUsec = data_.getUint64(0, Endian.little);
+    var timeBootMs = data_.getUint32(8, Endian.little);
+
+    return SystemTime(timeUnixUsec: timeUnixUsec, timeBootMs: timeBootMs);
+  }
+
+  @override
+  List<Object?> get props => [timeUnixUsec, timeBootMs];
+
+  @override
+  ByteData serialize() {
+    var data_ = ByteData(mavlinkEncodedLength);
+    data_.setUint64(0, timeUnixUsec, Endian.little);
+    data_.setUint32(8, timeBootMs, Endian.little);
+    return data_;
+  }
+
+  @override
+  String toString() {
+    return 'timeUnixUsec: $timeUnixUsec, ' 'timeBootMs: $timeBootMs, ';
   }
 }
 
@@ -1554,9 +1542,9 @@ class Timesync extends Equatable implements MavlinkMessage {
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 108;
+  static const int _mavlinkCrcExtra = 64;
 
-  static const int mavlinkEncodedLength = 26;
+  static const int mavlinkEncodedLength = 37;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1564,15 +1552,23 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  /// Left Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint16_t
-  /// left_mc_voltage
-  final uint16_t leftMcVoltage;
+  ///
+  /// Current active sub mode.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [UgvSubMode]
+  /// sub_mode
+  final UgvSubMode subMode;
 
-  /// Right Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint16_t
-  /// right_mc_voltage
-  final uint16_t rightMcVoltage;
+  ///
+  /// MAVLink type: uint8_t
+  /// ts1_minute
+  final uint8_t ts1Minute;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts1_second
+  final uint8_t ts1Second;
 
   ///
   /// Packed subsystem health information.
@@ -1621,6 +1617,21 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final UgvHealthState subsystemHealth4;
 
   ///
+  /// MAVLink type: uint8_t
+  /// ts2_hour
+  final uint8_t ts2Hour;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts2_minute
+  final uint8_t ts2Minute;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts2_second
+  final uint8_t ts2Second;
+
+  ///
   /// soc percentage of remaining battery
   ///
   /// MAVLink type: uint8_t
@@ -1636,12 +1647,9 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final UgvMainMode mainMode;
 
   ///
-  /// Current active sub mode.
-  ///
   /// MAVLink type: uint8_t
-  /// enum: [UgvSubMode]
-  /// sub_mode
-  final UgvSubMode subMode;
+  /// ts1_hour
+  final uint8_t ts1Hour;
 
   ///
   /// Current active speed mode.
@@ -1658,6 +1666,14 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// enum: [UgvDriveMode]
   /// drive_mode
   final UgvDriveMode driveMode;
+
+  ///
+  /// Current active drive mode.Arm(MAV_BOOL_FALSE = Disarm).
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [MavBool]
+  /// arm_mode
+  final MavBool armMode;
 
   ///
   /// Last main mode commanded by GCS.
@@ -1692,12 +1708,44 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final UgvDriveMode intendedDriveMode;
 
   ///
+  /// Last arm mode commanded by GCS.
+  ///
+  /// MAVLink type: uint8_t
+  /// enum: [MavBool]
+  /// intended_arm_mode
+  final MavBool intendedArmMode;
+
+  ///
   /// Reason for last mode transition.
   ///
   /// MAVLink type: uint8_t
   /// enum: [ModeChangeReason]
   /// mode_change_reason
   final ModeChangeReason modeChangeReason;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts3_hour
+  final uint8_t ts3Hour;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts3_minute
+  final uint8_t ts3Minute;
+
+  ///
+  /// bit 0: lv pdu channel 1 state
+  /// bit 1: lv pdu channel 2 state
+  /// bit 2: lv pdu channel 3 state
+  /// bit 3: lv pdu channel 4 state
+  /// bit 4: lv pdu channel 5 state
+  /// bit 5: lv pdu channel 6 state
+  /// bit 6: lv pdu channel 7 state
+  /// bit 7: lv pdu channel 8 state
+  ///
+  /// MAVLink type: uint8_t
+  /// pdu_channel_status
+  final uint8_t pduChannelStatus;
 
   ///
   /// Rear Left Motor Faults
@@ -1732,110 +1780,173 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   final UgvMotorError frontRightMotorFaults;
 
   ///
-  /// Left Motor Controller Faults
+  /// Rear Motor Controller Faults
   ///
   /// MAVLink type: uint8_t
   /// enum: [UgvMotorCtrlError]
-  /// left_mc_faults
-  final UgvMotorCtrlError leftMcFaults;
+  /// rear_mc_faults
+  final UgvMotorCtrlError rearMcFaults;
 
   ///
-  /// Right Motor Controller Faults
+  /// Front Motor Controller Faults
   ///
   /// MAVLink type: uint8_t
   /// enum: [UgvMotorCtrlError]
-  /// right_mc_faults
-  final UgvMotorCtrlError rightMcFaults;
+  /// front_mc_faults
+  final UgvMotorCtrlError frontMcFaults;
+
+  /// Left Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint8_t
+  /// rear_mc_voltage
+  final uint8_t rearMcVoltage;
+
+  /// Right Motor Controller Voltage (Unit: 0.1 V)
+  /// MAVLink type: uint8_t
+  /// front_mc_voltage
+  final uint8_t frontMcVoltage;
 
   /// Left Motor Controller Temperature (Unit: 1 Degree Celsius)
   /// MAVLink type: uint8_t
-  /// left_mc_temperature
-  final uint8_t leftMcTemperature;
+  /// rear_mc_temperature
+  final uint8_t rearMcTemperature;
 
   /// Right Motor Controller Temperature (Unit: 1 Degree Celsius)
   /// MAVLink type: uint8_t
-  /// right_mc_temperature
-  final uint8_t rightMcTemperature;
+  /// front_mc_temperature
+  final uint8_t frontMcTemperature;
+
+  ///
+  /// bit 0: head light state
+  /// bit 1: front fog light state
+  /// bit 2: rear light state
+  ///
+  /// MAVLink type: uint8_t
+  /// light_status
+  final uint8_t lightStatus;
+
+  ///
+  /// MAVLink type: uint8_t
+  /// ts3_second
+  final uint8_t ts3Second;
 
   UgvSystemInfo({
-    required this.leftMcVoltage,
-    required this.rightMcVoltage,
+    required this.subMode,
+    required this.ts1Minute,
+    required this.ts1Second,
     required this.subsystemHealth1,
     required this.subsystemHealth2,
     required this.subsystemHealth3,
     required this.subsystemHealth4,
+    required this.ts2Hour,
+    required this.ts2Minute,
+    required this.ts2Second,
     required this.batterySoc,
     required this.mainMode,
-    required this.subMode,
+    required this.ts1Hour,
     required this.speedMode,
     required this.driveMode,
+    required this.armMode,
     required this.intendedMainMode,
     required this.intendedSubMode,
     required this.intendedSpeedMode,
     required this.intendedDriveMode,
+    required this.intendedArmMode,
     required this.modeChangeReason,
+    required this.ts3Hour,
+    required this.ts3Minute,
+    required this.pduChannelStatus,
     required this.rearLeftMotorFaults,
     required this.rearRightMotorFaults,
     required this.frontLeftMotorFaults,
     required this.frontRightMotorFaults,
-    required this.leftMcFaults,
-    required this.rightMcFaults,
-    required this.leftMcTemperature,
-    required this.rightMcTemperature,
+    required this.rearMcFaults,
+    required this.frontMcFaults,
+    required this.rearMcVoltage,
+    required this.frontMcVoltage,
+    required this.rearMcTemperature,
+    required this.frontMcTemperature,
+    required this.lightStatus,
+    required this.ts3Second,
   });
 
   UgvSystemInfo copyWith({
-    uint16_t? leftMcVoltage,
-    uint16_t? rightMcVoltage,
+    UgvSubMode? subMode,
+    uint8_t? ts1Minute,
+    uint8_t? ts1Second,
     UgvHealthState? subsystemHealth1,
     UgvHealthState? subsystemHealth2,
     UgvHealthState? subsystemHealth3,
     UgvHealthState? subsystemHealth4,
+    uint8_t? ts2Hour,
+    uint8_t? ts2Minute,
+    uint8_t? ts2Second,
     uint8_t? batterySoc,
     UgvMainMode? mainMode,
-    UgvSubMode? subMode,
+    uint8_t? ts1Hour,
     UgvSpeedMode? speedMode,
     UgvDriveMode? driveMode,
+    MavBool? armMode,
     UgvMainMode? intendedMainMode,
     UgvSubMode? intendedSubMode,
     UgvSpeedMode? intendedSpeedMode,
     UgvDriveMode? intendedDriveMode,
+    MavBool? intendedArmMode,
     ModeChangeReason? modeChangeReason,
+    uint8_t? ts3Hour,
+    uint8_t? ts3Minute,
+    uint8_t? pduChannelStatus,
     UgvMotorError? rearLeftMotorFaults,
     UgvMotorError? rearRightMotorFaults,
     UgvMotorError? frontLeftMotorFaults,
     UgvMotorError? frontRightMotorFaults,
-    UgvMotorCtrlError? leftMcFaults,
-    UgvMotorCtrlError? rightMcFaults,
-    uint8_t? leftMcTemperature,
-    uint8_t? rightMcTemperature,
+    UgvMotorCtrlError? rearMcFaults,
+    UgvMotorCtrlError? frontMcFaults,
+    uint8_t? rearMcVoltage,
+    uint8_t? frontMcVoltage,
+    uint8_t? rearMcTemperature,
+    uint8_t? frontMcTemperature,
+    uint8_t? lightStatus,
+    uint8_t? ts3Second,
   }) {
     return UgvSystemInfo(
-      leftMcVoltage: leftMcVoltage ?? this.leftMcVoltage,
-      rightMcVoltage: rightMcVoltage ?? this.rightMcVoltage,
+      subMode: subMode ?? this.subMode,
+      ts1Minute: ts1Minute ?? this.ts1Minute,
+      ts1Second: ts1Second ?? this.ts1Second,
       subsystemHealth1: subsystemHealth1 ?? this.subsystemHealth1,
       subsystemHealth2: subsystemHealth2 ?? this.subsystemHealth2,
       subsystemHealth3: subsystemHealth3 ?? this.subsystemHealth3,
       subsystemHealth4: subsystemHealth4 ?? this.subsystemHealth4,
+      ts2Hour: ts2Hour ?? this.ts2Hour,
+      ts2Minute: ts2Minute ?? this.ts2Minute,
+      ts2Second: ts2Second ?? this.ts2Second,
       batterySoc: batterySoc ?? this.batterySoc,
       mainMode: mainMode ?? this.mainMode,
-      subMode: subMode ?? this.subMode,
+      ts1Hour: ts1Hour ?? this.ts1Hour,
       speedMode: speedMode ?? this.speedMode,
       driveMode: driveMode ?? this.driveMode,
+      armMode: armMode ?? this.armMode,
       intendedMainMode: intendedMainMode ?? this.intendedMainMode,
       intendedSubMode: intendedSubMode ?? this.intendedSubMode,
       intendedSpeedMode: intendedSpeedMode ?? this.intendedSpeedMode,
       intendedDriveMode: intendedDriveMode ?? this.intendedDriveMode,
+      intendedArmMode: intendedArmMode ?? this.intendedArmMode,
       modeChangeReason: modeChangeReason ?? this.modeChangeReason,
+      ts3Hour: ts3Hour ?? this.ts3Hour,
+      ts3Minute: ts3Minute ?? this.ts3Minute,
+      pduChannelStatus: pduChannelStatus ?? this.pduChannelStatus,
       rearLeftMotorFaults: rearLeftMotorFaults ?? this.rearLeftMotorFaults,
       rearRightMotorFaults: rearRightMotorFaults ?? this.rearRightMotorFaults,
       frontLeftMotorFaults: frontLeftMotorFaults ?? this.frontLeftMotorFaults,
       frontRightMotorFaults:
           frontRightMotorFaults ?? this.frontRightMotorFaults,
-      leftMcFaults: leftMcFaults ?? this.leftMcFaults,
-      rightMcFaults: rightMcFaults ?? this.rightMcFaults,
-      leftMcTemperature: leftMcTemperature ?? this.leftMcTemperature,
-      rightMcTemperature: rightMcTemperature ?? this.rightMcTemperature,
+      rearMcFaults: rearMcFaults ?? this.rearMcFaults,
+      frontMcFaults: frontMcFaults ?? this.frontMcFaults,
+      rearMcVoltage: rearMcVoltage ?? this.rearMcVoltage,
+      frontMcVoltage: frontMcVoltage ?? this.frontMcVoltage,
+      rearMcTemperature: rearMcTemperature ?? this.rearMcTemperature,
+      frontMcTemperature: frontMcTemperature ?? this.frontMcTemperature,
+      lightStatus: lightStatus ?? this.lightStatus,
+      ts3Second: ts3Second ?? this.ts3Second,
     );
   }
 
@@ -1846,142 +1957,207 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var leftMcVoltage = data_.getUint16(0, Endian.little);
-    var rightMcVoltage = data_.getUint16(2, Endian.little);
-    var subsystemHealth1 = data_.getUint8(4);
-    var subsystemHealth2 = data_.getUint8(5);
-    var subsystemHealth3 = data_.getUint8(6);
-    var subsystemHealth4 = data_.getUint8(7);
-    var batterySoc = data_.getUint8(8);
-    var mainMode = data_.getUint8(9);
-    var subMode = data_.getUint8(10);
-    var speedMode = data_.getUint8(11);
-    var driveMode = data_.getUint8(12);
-    var intendedMainMode = data_.getUint8(13);
-    var intendedSubMode = data_.getUint8(14);
-    var intendedSpeedMode = data_.getUint8(15);
-    var intendedDriveMode = data_.getUint8(16);
-    var modeChangeReason = data_.getUint8(17);
-    var rearLeftMotorFaults = data_.getUint8(18);
-    var rearRightMotorFaults = data_.getUint8(19);
-    var frontLeftMotorFaults = data_.getUint8(20);
-    var frontRightMotorFaults = data_.getUint8(21);
-    var leftMcFaults = data_.getUint8(22);
-    var rightMcFaults = data_.getUint8(23);
-    var leftMcTemperature = data_.getUint8(24);
-    var rightMcTemperature = data_.getUint8(25);
+    var subMode = data_.getUint8(0);
+    var ts1Minute = data_.getUint8(1);
+    var ts1Second = data_.getUint8(2);
+    var subsystemHealth1 = data_.getUint8(3);
+    var subsystemHealth2 = data_.getUint8(4);
+    var subsystemHealth3 = data_.getUint8(5);
+    var subsystemHealth4 = data_.getUint8(6);
+    var ts2Hour = data_.getUint8(7);
+    var ts2Minute = data_.getUint8(8);
+    var ts2Second = data_.getUint8(9);
+    var batterySoc = data_.getUint8(10);
+    var mainMode = data_.getUint8(11);
+    var ts1Hour = data_.getUint8(12);
+    var speedMode = data_.getUint8(13);
+    var driveMode = data_.getUint8(14);
+    var armMode = data_.getUint8(15);
+    var intendedMainMode = data_.getUint8(16);
+    var intendedSubMode = data_.getUint8(17);
+    var intendedSpeedMode = data_.getUint8(18);
+    var intendedDriveMode = data_.getUint8(19);
+    var intendedArmMode = data_.getUint8(20);
+    var modeChangeReason = data_.getUint8(21);
+    var ts3Hour = data_.getUint8(22);
+    var ts3Minute = data_.getUint8(23);
+    var pduChannelStatus = data_.getUint8(24);
+    var rearLeftMotorFaults = data_.getUint8(25);
+    var rearRightMotorFaults = data_.getUint8(26);
+    var frontLeftMotorFaults = data_.getUint8(27);
+    var frontRightMotorFaults = data_.getUint8(28);
+    var rearMcFaults = data_.getUint8(29);
+    var frontMcFaults = data_.getUint8(30);
+    var rearMcVoltage = data_.getUint8(31);
+    var frontMcVoltage = data_.getUint8(32);
+    var rearMcTemperature = data_.getUint8(33);
+    var frontMcTemperature = data_.getUint8(34);
+    var lightStatus = data_.getUint8(35);
+    var ts3Second = data_.getUint8(36);
 
     return UgvSystemInfo(
-        leftMcVoltage: leftMcVoltage,
-        rightMcVoltage: rightMcVoltage,
+        subMode: subMode,
+        ts1Minute: ts1Minute,
+        ts1Second: ts1Second,
         subsystemHealth1: subsystemHealth1,
         subsystemHealth2: subsystemHealth2,
         subsystemHealth3: subsystemHealth3,
         subsystemHealth4: subsystemHealth4,
+        ts2Hour: ts2Hour,
+        ts2Minute: ts2Minute,
+        ts2Second: ts2Second,
         batterySoc: batterySoc,
         mainMode: mainMode,
-        subMode: subMode,
+        ts1Hour: ts1Hour,
         speedMode: speedMode,
         driveMode: driveMode,
+        armMode: armMode,
         intendedMainMode: intendedMainMode,
         intendedSubMode: intendedSubMode,
         intendedSpeedMode: intendedSpeedMode,
         intendedDriveMode: intendedDriveMode,
+        intendedArmMode: intendedArmMode,
         modeChangeReason: modeChangeReason,
+        ts3Hour: ts3Hour,
+        ts3Minute: ts3Minute,
+        pduChannelStatus: pduChannelStatus,
         rearLeftMotorFaults: rearLeftMotorFaults,
         rearRightMotorFaults: rearRightMotorFaults,
         frontLeftMotorFaults: frontLeftMotorFaults,
         frontRightMotorFaults: frontRightMotorFaults,
-        leftMcFaults: leftMcFaults,
-        rightMcFaults: rightMcFaults,
-        leftMcTemperature: leftMcTemperature,
-        rightMcTemperature: rightMcTemperature);
+        rearMcFaults: rearMcFaults,
+        frontMcFaults: frontMcFaults,
+        rearMcVoltage: rearMcVoltage,
+        frontMcVoltage: frontMcVoltage,
+        rearMcTemperature: rearMcTemperature,
+        frontMcTemperature: frontMcTemperature,
+        lightStatus: lightStatus,
+        ts3Second: ts3Second);
   }
 
   @override
   List<Object?> get props => [
-        leftMcVoltage,
-        rightMcVoltage,
+        subMode,
+        ts1Minute,
+        ts1Second,
         subsystemHealth1,
         subsystemHealth2,
         subsystemHealth3,
         subsystemHealth4,
+        ts2Hour,
+        ts2Minute,
+        ts2Second,
         batterySoc,
         mainMode,
-        subMode,
+        ts1Hour,
         speedMode,
         driveMode,
+        armMode,
         intendedMainMode,
         intendedSubMode,
         intendedSpeedMode,
         intendedDriveMode,
+        intendedArmMode,
         modeChangeReason,
+        ts3Hour,
+        ts3Minute,
+        pduChannelStatus,
         rearLeftMotorFaults,
         rearRightMotorFaults,
         frontLeftMotorFaults,
         frontRightMotorFaults,
-        leftMcFaults,
-        rightMcFaults,
-        leftMcTemperature,
-        rightMcTemperature
+        rearMcFaults,
+        frontMcFaults,
+        rearMcVoltage,
+        frontMcVoltage,
+        rearMcTemperature,
+        frontMcTemperature,
+        lightStatus,
+        ts3Second
       ];
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint16(0, leftMcVoltage, Endian.little);
-    data_.setUint16(2, rightMcVoltage, Endian.little);
-    data_.setUint8(4, subsystemHealth1);
-    data_.setUint8(5, subsystemHealth2);
-    data_.setUint8(6, subsystemHealth3);
-    data_.setUint8(7, subsystemHealth4);
-    data_.setUint8(8, batterySoc);
-    data_.setUint8(9, mainMode);
-    data_.setUint8(10, subMode);
-    data_.setUint8(11, speedMode);
-    data_.setUint8(12, driveMode);
-    data_.setUint8(13, intendedMainMode);
-    data_.setUint8(14, intendedSubMode);
-    data_.setUint8(15, intendedSpeedMode);
-    data_.setUint8(16, intendedDriveMode);
-    data_.setUint8(17, modeChangeReason);
-    data_.setUint8(18, rearLeftMotorFaults);
-    data_.setUint8(19, rearRightMotorFaults);
-    data_.setUint8(20, frontLeftMotorFaults);
-    data_.setUint8(21, frontRightMotorFaults);
-    data_.setUint8(22, leftMcFaults);
-    data_.setUint8(23, rightMcFaults);
-    data_.setUint8(24, leftMcTemperature);
-    data_.setUint8(25, rightMcTemperature);
+    data_.setUint8(0, subMode);
+    data_.setUint8(1, ts1Minute);
+    data_.setUint8(2, ts1Second);
+    data_.setUint8(3, subsystemHealth1);
+    data_.setUint8(4, subsystemHealth2);
+    data_.setUint8(5, subsystemHealth3);
+    data_.setUint8(6, subsystemHealth4);
+    data_.setUint8(7, ts2Hour);
+    data_.setUint8(8, ts2Minute);
+    data_.setUint8(9, ts2Second);
+    data_.setUint8(10, batterySoc);
+    data_.setUint8(11, mainMode);
+    data_.setUint8(12, ts1Hour);
+    data_.setUint8(13, speedMode);
+    data_.setUint8(14, driveMode);
+    data_.setUint8(15, armMode);
+    data_.setUint8(16, intendedMainMode);
+    data_.setUint8(17, intendedSubMode);
+    data_.setUint8(18, intendedSpeedMode);
+    data_.setUint8(19, intendedDriveMode);
+    data_.setUint8(20, intendedArmMode);
+    data_.setUint8(21, modeChangeReason);
+    data_.setUint8(22, ts3Hour);
+    data_.setUint8(23, ts3Minute);
+    data_.setUint8(24, pduChannelStatus);
+    data_.setUint8(25, rearLeftMotorFaults);
+    data_.setUint8(26, rearRightMotorFaults);
+    data_.setUint8(27, frontLeftMotorFaults);
+    data_.setUint8(28, frontRightMotorFaults);
+    data_.setUint8(29, rearMcFaults);
+    data_.setUint8(30, frontMcFaults);
+    data_.setUint8(31, rearMcVoltage);
+    data_.setUint8(32, frontMcVoltage);
+    data_.setUint8(33, rearMcTemperature);
+    data_.setUint8(34, frontMcTemperature);
+    data_.setUint8(35, lightStatus);
+    data_.setUint8(36, ts3Second);
     return data_;
   }
 
   @override
   String toString() {
-    return 'leftMcVoltage: $leftMcVoltage, '
-        'rightMcVoltage: $rightMcVoltage, '
+    return 'subMode: $subMode, '
+        'ts1Minute: $ts1Minute, '
+        'ts1Second: $ts1Second, '
         'subsystemHealth1: $subsystemHealth1, '
         'subsystemHealth2: $subsystemHealth2, '
         'subsystemHealth3: $subsystemHealth3, '
         'subsystemHealth4: $subsystemHealth4, '
+        'ts2Hour: $ts2Hour, '
+        'ts2Minute: $ts2Minute, '
+        'ts2Second: $ts2Second, '
         'batterySoc: $batterySoc, '
         'mainMode: $mainMode, '
-        'subMode: $subMode, '
+        'ts1Hour: $ts1Hour, '
         'speedMode: $speedMode, '
         'driveMode: $driveMode, '
+        'armMode: $armMode, '
         'intendedMainMode: $intendedMainMode, '
         'intendedSubMode: $intendedSubMode, '
         'intendedSpeedMode: $intendedSpeedMode, '
         'intendedDriveMode: $intendedDriveMode, '
+        'intendedArmMode: $intendedArmMode, '
         'modeChangeReason: $modeChangeReason, '
+        'ts3Hour: $ts3Hour, '
+        'ts3Minute: $ts3Minute, '
+        'pduChannelStatus: $pduChannelStatus, '
         'rearLeftMotorFaults: $rearLeftMotorFaults, '
         'rearRightMotorFaults: $rearRightMotorFaults, '
         'frontLeftMotorFaults: $frontLeftMotorFaults, '
         'frontRightMotorFaults: $frontRightMotorFaults, '
-        'leftMcFaults: $leftMcFaults, '
-        'rightMcFaults: $rightMcFaults, '
-        'leftMcTemperature: $leftMcTemperature, '
-        'rightMcTemperature: $rightMcTemperature, ';
+        'rearMcFaults: $rearMcFaults, '
+        'frontMcFaults: $frontMcFaults, '
+        'rearMcVoltage: $rearMcVoltage, '
+        'frontMcVoltage: $frontMcVoltage, '
+        'rearMcTemperature: $rearMcTemperature, '
+        'frontMcTemperature: $frontMcTemperature, '
+        'lightStatus: $lightStatus, '
+        'ts3Second: $ts3Second, ';
   }
 }
 
@@ -2287,20 +2463,20 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat.parse(data);
-      case 1:
-        return SysStatus.parse(data);
-      case 2:
-        return SystemTime.parse(data);
-      case 69:
-        return ManualControl.parse(data);
+      case 111:
+        return Timesync.parse(data);
       case 76:
         return CommandLong.parse(data);
       case 77:
         return CommandAck.parse(data);
+      case 69:
+        return ManualControl.parse(data);
       case 109:
         return RadioStatus.parse(data);
-      case 111:
-        return Timesync.parse(data);
+      case 1:
+        return SysStatus.parse(data);
+      case 2:
+        return SystemTime.parse(data);
       case 50001:
         return UgvSystemInfo.parse(data);
       case 50002:
@@ -2317,20 +2493,20 @@ class MavlinkDialectUgvcustom implements MavlinkDialect {
     switch (messageID) {
       case 0:
         return Heartbeat._mavlinkCrcExtra;
-      case 1:
-        return SysStatus._mavlinkCrcExtra;
-      case 2:
-        return SystemTime._mavlinkCrcExtra;
-      case 69:
-        return ManualControl._mavlinkCrcExtra;
+      case 111:
+        return Timesync._mavlinkCrcExtra;
       case 76:
         return CommandLong._mavlinkCrcExtra;
       case 77:
         return CommandAck._mavlinkCrcExtra;
+      case 69:
+        return ManualControl._mavlinkCrcExtra;
       case 109:
         return RadioStatus._mavlinkCrcExtra;
-      case 111:
-        return Timesync._mavlinkCrcExtra;
+      case 1:
+        return SysStatus._mavlinkCrcExtra;
+      case 2:
+        return SystemTime._mavlinkCrcExtra;
       case 50001:
         return UgvSystemInfo._mavlinkCrcExtra;
       case 50002:
