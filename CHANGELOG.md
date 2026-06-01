@@ -44,3 +44,7 @@
 # 0.2.8
 - Update submodule tag reference to v0.2.8
 - Updated dialect to reflect new XML message definition changes
+
+# 0.2.9
+- Update submodule tag reference to v0.2.9
+- Updated dialect to reflect new XML message definition changes
