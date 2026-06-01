@@ -341,16 +341,16 @@ const UgvSubMode hold = 10;
 typedef UgvSpeedMode = int;
 
 /// low speed mode
-/// LOW
-const UgvSpeedMode low = 1;
+/// UGV_SPEED_LOW
+const UgvSpeedMode ugvSpeedLow = 1;
 
 /// medium speed mode
-/// MEDIUM
-const UgvSpeedMode medium = 2;
+/// UGV_SPEED_MEDIUM
+const UgvSpeedMode ugvSpeedMedium = 2;
 
 /// high speed mode
-/// HIGH
-const UgvSpeedMode high = 3;
+/// UGV_SPEED_HIGH
+const UgvSpeedMode ugvSpeedHigh = 3;
 
 /// Operator drive mode in which the UGV operates in.
 /// UGV_DRIVE_MODE
@@ -1560,12 +1560,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// sub_mode
   final UgvSubMode subMode;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts1_minute
   final uint8_t ts1Minute;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts1_second
   final uint8_t ts1Second;
@@ -1616,17 +1616,17 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// subsystem_health_4
   final UgvHealthState subsystemHealth4;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts2_hour
   final uint8_t ts2Hour;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts2_minute
   final uint8_t ts2Minute;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts2_second
   final uint8_t ts2Second;
@@ -1646,7 +1646,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// main_mode
   final UgvMainMode mainMode;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts1_hour
   final uint8_t ts1Hour;
@@ -1723,12 +1723,12 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// mode_change_reason
   final ModeChangeReason modeChangeReason;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts3_hour
   final uint8_t ts3Hour;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts3_minute
   final uint8_t ts3Minute;
@@ -1824,7 +1824,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// light_status
   final uint8_t lightStatus;
 
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
   /// ts3_second
   final uint8_t ts3Second;
