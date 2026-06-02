@@ -48,3 +48,8 @@
 # 0.2.9
 - Update submodule tag reference to v0.2.9
 - Updated dialect to reflect new XML message definition changes
+
+# 0.2.10
+- Update submodule with removed MC temperature and voltage fields to avoid CRC mismatch
+- Regenerate dialect with updated XML from submodule
+- Bump package patch version
