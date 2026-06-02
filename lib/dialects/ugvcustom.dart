@@ -1542,9 +1542,9 @@ class SystemTime extends Equatable implements MavlinkMessage {
 class UgvSystemInfo extends Equatable implements MavlinkMessage {
   static const int kMavlinkMessageId = 50001;
 
-  static const int _mavlinkCrcExtra = 64;
+  static const int _mavlinkCrcExtra = 52;
 
-  static const int mavlinkEncodedLength = 37;
+  static const int mavlinkEncodedLength = 33;
 
   @override
   int get mavlinkMessageId => kMavlinkMessageId;
@@ -1552,13 +1552,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   @override
   int get mavlinkCrcExtra => _mavlinkCrcExtra;
 
-  ///
-  /// Current active sub mode.
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
-  /// enum: [UgvSubMode]
-  /// sub_mode
-  final UgvSubMode subMode;
+  /// ts1_hour
+  final uint8_t ts1Hour;
 
   /// no_definition
   /// MAVLink type: uint8_t
@@ -1646,10 +1643,13 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// main_mode
   final UgvMainMode mainMode;
 
-  /// no_definition
+  ///
+  /// Current active sub mode.
+  ///
   /// MAVLink type: uint8_t
-  /// ts1_hour
-  final uint8_t ts1Hour;
+  /// enum: [UgvSubMode]
+  /// sub_mode
+  final UgvSubMode subMode;
 
   ///
   /// Current active speed mode.
@@ -1733,19 +1733,10 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// ts3_minute
   final uint8_t ts3Minute;
 
-  ///
-  /// bit 0: lv pdu channel 1 state
-  /// bit 1: lv pdu channel 2 state
-  /// bit 2: lv pdu channel 3 state
-  /// bit 3: lv pdu channel 4 state
-  /// bit 4: lv pdu channel 5 state
-  /// bit 5: lv pdu channel 6 state
-  /// bit 6: lv pdu channel 7 state
-  /// bit 7: lv pdu channel 8 state
-  ///
+  /// no_definition
   /// MAVLink type: uint8_t
-  /// pdu_channel_status
-  final uint8_t pduChannelStatus;
+  /// ts3_second
+  final uint8_t ts3Second;
 
   ///
   /// Rear Left Motor Faults
@@ -1795,26 +1786,6 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// front_mc_faults
   final UgvMotorCtrlError frontMcFaults;
 
-  /// Left Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint8_t
-  /// rear_mc_voltage
-  final uint8_t rearMcVoltage;
-
-  /// Right Motor Controller Voltage (Unit: 0.1 V)
-  /// MAVLink type: uint8_t
-  /// front_mc_voltage
-  final uint8_t frontMcVoltage;
-
-  /// Left Motor Controller Temperature (Unit: 1 Degree Celsius)
-  /// MAVLink type: uint8_t
-  /// rear_mc_temperature
-  final uint8_t rearMcTemperature;
-
-  /// Right Motor Controller Temperature (Unit: 1 Degree Celsius)
-  /// MAVLink type: uint8_t
-  /// front_mc_temperature
-  final uint8_t frontMcTemperature;
-
   ///
   /// bit 0: head light state
   /// bit 1: front fog light state
@@ -1824,13 +1795,22 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
   /// light_status
   final uint8_t lightStatus;
 
-  /// no_definition
+  ///
+  /// bit 0: lv pdu channel 1 state
+  /// bit 1: lv pdu channel 2 state
+  /// bit 2: lv pdu channel 3 state
+  /// bit 3: lv pdu channel 4 state
+  /// bit 4: lv pdu channel 5 state
+  /// bit 5: lv pdu channel 6 state
+  /// bit 6: lv pdu channel 7 state
+  /// bit 7: lv pdu channel 8 state
+  ///
   /// MAVLink type: uint8_t
-  /// ts3_second
-  final uint8_t ts3Second;
+  /// pdu_channel_status
+  final uint8_t pduChannelStatus;
 
   UgvSystemInfo({
-    required this.subMode,
+    required this.ts1Hour,
     required this.ts1Minute,
     required this.ts1Second,
     required this.subsystemHealth1,
@@ -1842,7 +1822,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.ts2Second,
     required this.batterySoc,
     required this.mainMode,
-    required this.ts1Hour,
+    required this.subMode,
     required this.speedMode,
     required this.driveMode,
     required this.armMode,
@@ -1854,23 +1834,19 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     required this.modeChangeReason,
     required this.ts3Hour,
     required this.ts3Minute,
-    required this.pduChannelStatus,
+    required this.ts3Second,
     required this.rearLeftMotorFaults,
     required this.rearRightMotorFaults,
     required this.frontLeftMotorFaults,
     required this.frontRightMotorFaults,
     required this.rearMcFaults,
     required this.frontMcFaults,
-    required this.rearMcVoltage,
-    required this.frontMcVoltage,
-    required this.rearMcTemperature,
-    required this.frontMcTemperature,
     required this.lightStatus,
-    required this.ts3Second,
+    required this.pduChannelStatus,
   });
 
   UgvSystemInfo copyWith({
-    UgvSubMode? subMode,
+    uint8_t? ts1Hour,
     uint8_t? ts1Minute,
     uint8_t? ts1Second,
     UgvHealthState? subsystemHealth1,
@@ -1882,7 +1858,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     uint8_t? ts2Second,
     uint8_t? batterySoc,
     UgvMainMode? mainMode,
-    uint8_t? ts1Hour,
+    UgvSubMode? subMode,
     UgvSpeedMode? speedMode,
     UgvDriveMode? driveMode,
     MavBool? armMode,
@@ -1894,22 +1870,18 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     ModeChangeReason? modeChangeReason,
     uint8_t? ts3Hour,
     uint8_t? ts3Minute,
-    uint8_t? pduChannelStatus,
+    uint8_t? ts3Second,
     UgvMotorError? rearLeftMotorFaults,
     UgvMotorError? rearRightMotorFaults,
     UgvMotorError? frontLeftMotorFaults,
     UgvMotorError? frontRightMotorFaults,
     UgvMotorCtrlError? rearMcFaults,
     UgvMotorCtrlError? frontMcFaults,
-    uint8_t? rearMcVoltage,
-    uint8_t? frontMcVoltage,
-    uint8_t? rearMcTemperature,
-    uint8_t? frontMcTemperature,
     uint8_t? lightStatus,
-    uint8_t? ts3Second,
+    uint8_t? pduChannelStatus,
   }) {
     return UgvSystemInfo(
-      subMode: subMode ?? this.subMode,
+      ts1Hour: ts1Hour ?? this.ts1Hour,
       ts1Minute: ts1Minute ?? this.ts1Minute,
       ts1Second: ts1Second ?? this.ts1Second,
       subsystemHealth1: subsystemHealth1 ?? this.subsystemHealth1,
@@ -1921,7 +1893,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
       ts2Second: ts2Second ?? this.ts2Second,
       batterySoc: batterySoc ?? this.batterySoc,
       mainMode: mainMode ?? this.mainMode,
-      ts1Hour: ts1Hour ?? this.ts1Hour,
+      subMode: subMode ?? this.subMode,
       speedMode: speedMode ?? this.speedMode,
       driveMode: driveMode ?? this.driveMode,
       armMode: armMode ?? this.armMode,
@@ -1933,7 +1905,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
       modeChangeReason: modeChangeReason ?? this.modeChangeReason,
       ts3Hour: ts3Hour ?? this.ts3Hour,
       ts3Minute: ts3Minute ?? this.ts3Minute,
-      pduChannelStatus: pduChannelStatus ?? this.pduChannelStatus,
+      ts3Second: ts3Second ?? this.ts3Second,
       rearLeftMotorFaults: rearLeftMotorFaults ?? this.rearLeftMotorFaults,
       rearRightMotorFaults: rearRightMotorFaults ?? this.rearRightMotorFaults,
       frontLeftMotorFaults: frontLeftMotorFaults ?? this.frontLeftMotorFaults,
@@ -1941,12 +1913,8 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           frontRightMotorFaults ?? this.frontRightMotorFaults,
       rearMcFaults: rearMcFaults ?? this.rearMcFaults,
       frontMcFaults: frontMcFaults ?? this.frontMcFaults,
-      rearMcVoltage: rearMcVoltage ?? this.rearMcVoltage,
-      frontMcVoltage: frontMcVoltage ?? this.frontMcVoltage,
-      rearMcTemperature: rearMcTemperature ?? this.rearMcTemperature,
-      frontMcTemperature: frontMcTemperature ?? this.frontMcTemperature,
       lightStatus: lightStatus ?? this.lightStatus,
-      ts3Second: ts3Second ?? this.ts3Second,
+      pduChannelStatus: pduChannelStatus ?? this.pduChannelStatus,
     );
   }
 
@@ -1957,7 +1925,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
           List<int>.filled(len, 0);
       data_ = Uint8List.fromList(d).buffer.asByteData();
     }
-    var subMode = data_.getUint8(0);
+    var ts1Hour = data_.getUint8(0);
     var ts1Minute = data_.getUint8(1);
     var ts1Second = data_.getUint8(2);
     var subsystemHealth1 = data_.getUint8(3);
@@ -1969,7 +1937,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     var ts2Second = data_.getUint8(9);
     var batterySoc = data_.getUint8(10);
     var mainMode = data_.getUint8(11);
-    var ts1Hour = data_.getUint8(12);
+    var subMode = data_.getUint8(12);
     var speedMode = data_.getUint8(13);
     var driveMode = data_.getUint8(14);
     var armMode = data_.getUint8(15);
@@ -1981,22 +1949,18 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     var modeChangeReason = data_.getUint8(21);
     var ts3Hour = data_.getUint8(22);
     var ts3Minute = data_.getUint8(23);
-    var pduChannelStatus = data_.getUint8(24);
+    var ts3Second = data_.getUint8(24);
     var rearLeftMotorFaults = data_.getUint8(25);
     var rearRightMotorFaults = data_.getUint8(26);
     var frontLeftMotorFaults = data_.getUint8(27);
     var frontRightMotorFaults = data_.getUint8(28);
     var rearMcFaults = data_.getUint8(29);
     var frontMcFaults = data_.getUint8(30);
-    var rearMcVoltage = data_.getUint8(31);
-    var frontMcVoltage = data_.getUint8(32);
-    var rearMcTemperature = data_.getUint8(33);
-    var frontMcTemperature = data_.getUint8(34);
-    var lightStatus = data_.getUint8(35);
-    var ts3Second = data_.getUint8(36);
+    var lightStatus = data_.getUint8(31);
+    var pduChannelStatus = data_.getUint8(32);
 
     return UgvSystemInfo(
-        subMode: subMode,
+        ts1Hour: ts1Hour,
         ts1Minute: ts1Minute,
         ts1Second: ts1Second,
         subsystemHealth1: subsystemHealth1,
@@ -2008,7 +1972,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         ts2Second: ts2Second,
         batterySoc: batterySoc,
         mainMode: mainMode,
-        ts1Hour: ts1Hour,
+        subMode: subMode,
         speedMode: speedMode,
         driveMode: driveMode,
         armMode: armMode,
@@ -2020,24 +1984,20 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         modeChangeReason: modeChangeReason,
         ts3Hour: ts3Hour,
         ts3Minute: ts3Minute,
-        pduChannelStatus: pduChannelStatus,
+        ts3Second: ts3Second,
         rearLeftMotorFaults: rearLeftMotorFaults,
         rearRightMotorFaults: rearRightMotorFaults,
         frontLeftMotorFaults: frontLeftMotorFaults,
         frontRightMotorFaults: frontRightMotorFaults,
         rearMcFaults: rearMcFaults,
         frontMcFaults: frontMcFaults,
-        rearMcVoltage: rearMcVoltage,
-        frontMcVoltage: frontMcVoltage,
-        rearMcTemperature: rearMcTemperature,
-        frontMcTemperature: frontMcTemperature,
         lightStatus: lightStatus,
-        ts3Second: ts3Second);
+        pduChannelStatus: pduChannelStatus);
   }
 
   @override
   List<Object?> get props => [
-        subMode,
+        ts1Hour,
         ts1Minute,
         ts1Second,
         subsystemHealth1,
@@ -2049,7 +2009,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         ts2Second,
         batterySoc,
         mainMode,
-        ts1Hour,
+        subMode,
         speedMode,
         driveMode,
         armMode,
@@ -2061,25 +2021,21 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         modeChangeReason,
         ts3Hour,
         ts3Minute,
-        pduChannelStatus,
+        ts3Second,
         rearLeftMotorFaults,
         rearRightMotorFaults,
         frontLeftMotorFaults,
         frontRightMotorFaults,
         rearMcFaults,
         frontMcFaults,
-        rearMcVoltage,
-        frontMcVoltage,
-        rearMcTemperature,
-        frontMcTemperature,
         lightStatus,
-        ts3Second
+        pduChannelStatus
       ];
 
   @override
   ByteData serialize() {
     var data_ = ByteData(mavlinkEncodedLength);
-    data_.setUint8(0, subMode);
+    data_.setUint8(0, ts1Hour);
     data_.setUint8(1, ts1Minute);
     data_.setUint8(2, ts1Second);
     data_.setUint8(3, subsystemHealth1);
@@ -2091,7 +2047,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     data_.setUint8(9, ts2Second);
     data_.setUint8(10, batterySoc);
     data_.setUint8(11, mainMode);
-    data_.setUint8(12, ts1Hour);
+    data_.setUint8(12, subMode);
     data_.setUint8(13, speedMode);
     data_.setUint8(14, driveMode);
     data_.setUint8(15, armMode);
@@ -2103,25 +2059,21 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
     data_.setUint8(21, modeChangeReason);
     data_.setUint8(22, ts3Hour);
     data_.setUint8(23, ts3Minute);
-    data_.setUint8(24, pduChannelStatus);
+    data_.setUint8(24, ts3Second);
     data_.setUint8(25, rearLeftMotorFaults);
     data_.setUint8(26, rearRightMotorFaults);
     data_.setUint8(27, frontLeftMotorFaults);
     data_.setUint8(28, frontRightMotorFaults);
     data_.setUint8(29, rearMcFaults);
     data_.setUint8(30, frontMcFaults);
-    data_.setUint8(31, rearMcVoltage);
-    data_.setUint8(32, frontMcVoltage);
-    data_.setUint8(33, rearMcTemperature);
-    data_.setUint8(34, frontMcTemperature);
-    data_.setUint8(35, lightStatus);
-    data_.setUint8(36, ts3Second);
+    data_.setUint8(31, lightStatus);
+    data_.setUint8(32, pduChannelStatus);
     return data_;
   }
 
   @override
   String toString() {
-    return 'subMode: $subMode, '
+    return 'ts1Hour: $ts1Hour, '
         'ts1Minute: $ts1Minute, '
         'ts1Second: $ts1Second, '
         'subsystemHealth1: $subsystemHealth1, '
@@ -2133,7 +2085,7 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         'ts2Second: $ts2Second, '
         'batterySoc: $batterySoc, '
         'mainMode: $mainMode, '
-        'ts1Hour: $ts1Hour, '
+        'subMode: $subMode, '
         'speedMode: $speedMode, '
         'driveMode: $driveMode, '
         'armMode: $armMode, '
@@ -2145,19 +2097,15 @@ class UgvSystemInfo extends Equatable implements MavlinkMessage {
         'modeChangeReason: $modeChangeReason, '
         'ts3Hour: $ts3Hour, '
         'ts3Minute: $ts3Minute, '
-        'pduChannelStatus: $pduChannelStatus, '
+        'ts3Second: $ts3Second, '
         'rearLeftMotorFaults: $rearLeftMotorFaults, '
         'rearRightMotorFaults: $rearRightMotorFaults, '
         'frontLeftMotorFaults: $frontLeftMotorFaults, '
         'frontRightMotorFaults: $frontRightMotorFaults, '
         'rearMcFaults: $rearMcFaults, '
         'frontMcFaults: $frontMcFaults, '
-        'rearMcVoltage: $rearMcVoltage, '
-        'frontMcVoltage: $frontMcVoltage, '
-        'rearMcTemperature: $rearMcTemperature, '
-        'frontMcTemperature: $frontMcTemperature, '
         'lightStatus: $lightStatus, '
-        'ts3Second: $ts3Second, ';
+        'pduChannelStatus: $pduChannelStatus, ';
   }
 }
 

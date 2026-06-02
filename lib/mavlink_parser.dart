@@ -49,8 +49,9 @@ class MavlinkParser {
   int _crcHighByte = -1;
 
   final MavlinkDialect _dialect;
+  bool? logEnabled = false;
 
-  MavlinkParser(this._dialect);
+  MavlinkParser(this._dialect, {this.logEnabled});
 
   void _resetContext() {
     _version = MavlinkVersion.v1;
@@ -71,8 +72,18 @@ class MavlinkParser {
 
   bool _checkCRC() {
     var header = (_version == MavlinkVersion.v1)
-      ? [_payloadLength, _sequence, _systemId, _componentId, _messageId]
-      : [_payloadLength, _incompatibilityFlags, _compatibilityFlags, _sequence, _systemId, _componentId, _messageIdLow, _messageIdMiddle, _messageIdHigh];
+        ? [_payloadLength, _sequence, _systemId, _componentId, _messageId]
+        : [
+      _payloadLength,
+      _incompatibilityFlags,
+      _compatibilityFlags,
+      _sequence,
+      _systemId,
+      _componentId,
+      _messageIdLow,
+      _messageIdMiddle,
+      _messageIdHigh
+    ];
 
     var crc = CrcX25();
 
@@ -97,112 +108,116 @@ class MavlinkParser {
   void parse(Uint8List data) {
     for (int d in data) {
       switch (_state) {
-      case _ParserState.init:
-        switch (d) {
-        case MavlinkFrame.mavlinkStxV1:
-          _version = MavlinkVersion.v1;
-          _state = _ParserState.waitPayloadLength;
-          break;
-        case MavlinkFrame.mavlinkStxV2:
-          _version = MavlinkVersion.v2;
-          _state = _ParserState.waitPayloadLength;
-          break;
-        default:
-          // Skip the byte
-        }
-        break;
-      case _ParserState.waitPayloadLength:
-        _payloadLength = d;
-        if (_version == MavlinkVersion.v1) {
-          _state = _ParserState.waitPacketSequence;
-        } else {
-          // For MAVLink v2
-          _state = _ParserState.waitIncompatibilityFalgs;
-        }
-        break;
-      case _ParserState.waitIncompatibilityFalgs:
-        // For MAVLink v2
-        _incompatibilityFlags = d;
-        _state = _ParserState.waitCompatibilityFlags;
-        break;
-      case _ParserState.waitCompatibilityFlags:
-        // For MAVLink v2
-        _compatibilityFlags = d;
-        _state = _ParserState.waitPacketSequence;
-        break;
-      case _ParserState.waitPacketSequence:
-        _sequence = d;
-        _state = _ParserState.waitSystemId;
-        break;
-      case _ParserState.waitSystemId:
-        _systemId = d;
-        _state = _ParserState.waitComponentId;
-        break;
-      case _ParserState.waitComponentId:
-        _componentId = d;
-        if (_version == MavlinkVersion.v1) {
-          _state = _ParserState.waitMessageIdHigh;
-        } else {
-          _state = _ParserState.waitMessageIdLow;
-        }
-        break;
-      case _ParserState.waitMessageIdLow:
-        // For MAVLink v2
-        _messageIdLow = d;
-        _state = _ParserState.waitMessageIdMiddle;
-        break;
-      case _ParserState.waitMessageIdMiddle:
-        // For MAVLink v2
-        _messageIdMiddle = d;
-        _state = _ParserState.waitMessageIdHigh;
-        break;
-      case _ParserState.waitMessageIdHigh:
-        if (_version == MavlinkVersion.v1) {
-          _messageId = d;
-        } else {
-          // For MAVLink v2
-          _messageIdHigh = d;
-          _messageId = (_messageIdHigh << 16) ^ (_messageIdMiddle << 8) ^ _messageIdLow;
-        }
-
-        if (_payloadLength == 0) {
-          _state = _ParserState.waitCrcLowByte;
-        } else {
-          _state = _ParserState.waitPayloadEnd;
-          _payloadCursor = 0;
-        }
-        break;
-      case _ParserState.waitPayloadEnd:
-        if (_payloadCursor < _payloadLength) {
-          _payload[_payloadCursor++] = d;
-        }
-
-        if (_payloadCursor == _payloadLength) {
-          _state = _ParserState.waitCrcLowByte;
-        }
-        break;
-      case _ParserState.waitCrcLowByte:
-        _crcLowByte = d;
-        _state = _ParserState.waitCrcHighByte;
-        break;
-      case _ParserState.waitCrcHighByte:
-        _crcHighByte = d;
-
-        if (_version == MavlinkVersion.v2) {
-          if (_incompatibilityFlags == _mavlinkIflagSigned) {
-            print("[MAVLINK PARSER] Signed Packet detected. Dropping packet with message id $_messageId");
-            // TODO Handle the Signature bits.
-            _resetContext();
-            _state = _ParserState.init;
-            break;
+        case _ParserState.init:
+          switch (d) {
+            case MavlinkFrame.mavlinkStxV1:
+              _version = MavlinkVersion.v1;
+              _state = _ParserState.waitPayloadLength;
+              break;
+            case MavlinkFrame.mavlinkStxV2:
+              _version = MavlinkVersion.v2;
+              _state = _ParserState.waitPayloadLength;
+              break;
+            default:
+            // Skip the byte
           }
-        }
+          break;
+        case _ParserState.waitPayloadLength:
+          _payloadLength = d;
+          if (_version == MavlinkVersion.v1) {
+            _state = _ParserState.waitPacketSequence;
+          } else {
+            // For MAVLink v2
+            _state = _ParserState.waitIncompatibilityFalgs;
+          }
+          break;
+        case _ParserState.waitIncompatibilityFalgs:
+        // For MAVLink v2
+          _incompatibilityFlags = d;
+          _state = _ParserState.waitCompatibilityFlags;
+          break;
+        case _ParserState.waitCompatibilityFlags:
+        // For MAVLink v2
+          _compatibilityFlags = d;
+          _state = _ParserState.waitPacketSequence;
+          break;
+        case _ParserState.waitPacketSequence:
+          _sequence = d;
+          _state = _ParserState.waitSystemId;
+          break;
+        case _ParserState.waitSystemId:
+          _systemId = d;
+          _state = _ParserState.waitComponentId;
+          break;
+        case _ParserState.waitComponentId:
+          _componentId = d;
+          if (_version == MavlinkVersion.v1) {
+            _state = _ParserState.waitMessageIdHigh;
+          } else {
+            _state = _ParserState.waitMessageIdLow;
+          }
+          break;
+        case _ParserState.waitMessageIdLow:
+        // For MAVLink v2
+          _messageIdLow = d;
+          _state = _ParserState.waitMessageIdMiddle;
+          break;
+        case _ParserState.waitMessageIdMiddle:
+        // For MAVLink v2
+          _messageIdMiddle = d;
+          _state = _ParserState.waitMessageIdHigh;
+          break;
+        case _ParserState.waitMessageIdHigh:
+          if (_version == MavlinkVersion.v1) {
+            _messageId = d;
+          } else {
+            // For MAVLink v2
+            _messageIdHigh = d;
+            _messageId =
+            (_messageIdHigh << 16) ^ (_messageIdMiddle << 8) ^ _messageIdLow;
+          }
 
-        _addMavlinkFrameToStream();
+          if (_payloadLength == 0) {
+            _state = _ParserState.waitCrcLowByte;
+          } else {
+            _state = _ParserState.waitPayloadEnd;
+            _payloadCursor = 0;
+          }
+          break;
+        case _ParserState.waitPayloadEnd:
+          if (_payloadCursor < _payloadLength) {
+            _payload[_payloadCursor++] = d;
+          }
 
-        _resetContext();
-        _state = _ParserState.init;
-        break;
+          if (_payloadCursor == _payloadLength) {
+            _state = _ParserState.waitCrcLowByte;
+          }
+          break;
+        case _ParserState.waitCrcLowByte:
+          _crcLowByte = d;
+          _state = _ParserState.waitCrcHighByte;
+          break;
+        case _ParserState.waitCrcHighByte:
+          _crcHighByte = d;
+
+          if (_version == MavlinkVersion.v2) {
+            if (_incompatibilityFlags == _mavlinkIflagSigned) {
+              if (logEnabled) {
+                print(
+                    "[MAVLINK PARSER] Signed Packet detected. Dropping packet with message id $_messageId");
+              }
+              // TODO Handle the Signature bits.
+              _resetContext();
+              _state = _ParserState.init;
+              break;
+            }
+          }
+
+          _addMavlinkFrameToStream();
+
+          _resetContext();
+          _state = _ParserState.init;
+          break;
       }
     }
   }
@@ -210,19 +225,23 @@ class MavlinkParser {
   bool _addMavlinkFrameToStream() {
     // check CRC bytes.
     if (!_checkCRC()) {
-      print("CRC Check failed. Dropping packet with message id $_messageId");
+      if (logEnabled) {
+        print("CRC Check failed. Dropping packet with message id $_messageId");
+      }
       // The MAVLink packet is a bad CRC.
       // Ignore the MAVLink packet.
       return false;
     }
 
-    var message = _dialect.parse(_messageId, _payload.buffer.asByteData(0, _payloadLength));
+    var message = _dialect.parse(
+        _messageId, _payload.buffer.asByteData(0, _payloadLength));
     if (message == null) {
       return false;
     }
 
     // Got a Mavlink Frame data.
-    var frame = MavlinkFrame(_version, _sequence, _systemId, _componentId, message);
+    var frame = MavlinkFrame(
+        _version, _sequence, _systemId, _componentId, message);
     _streamController.add(frame);
     return true;
   }
