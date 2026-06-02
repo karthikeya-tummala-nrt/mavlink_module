@@ -49,9 +49,9 @@ class MavlinkParser {
   int _crcHighByte = -1;
 
   final MavlinkDialect _dialect;
-  bool? logEnabled = false;
+  final bool logEnabled;
 
-  MavlinkParser(this._dialect, {this.logEnabled});
+  MavlinkParser(this._dialect, {this.logEnabled = false});
 
   void _resetContext() {
     _version = MavlinkVersion.v1;
