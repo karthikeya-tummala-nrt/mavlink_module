@@ -190,6 +190,7 @@ class MavlinkParser {
 
         if (_version == MavlinkVersion.v2) {
           if (_incompatibilityFlags == _mavlinkIflagSigned) {
+            print("[MAVLINK PARSER] Signed Packet detected. Dropping packet with message id $_messageId");
             // TODO Handle the Signature bits.
             _resetContext();
             _state = _ParserState.init;
@@ -209,6 +210,7 @@ class MavlinkParser {
   bool _addMavlinkFrameToStream() {
     // check CRC bytes.
     if (!_checkCRC()) {
+      print("CRC Check failed. Dropping packet with message id $_messageId");
       // The MAVLink packet is a bad CRC.
       // Ignore the MAVLink packet.
       return false;
