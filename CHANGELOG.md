@@ -53,3 +53,4 @@
 - Update submodule with removed MC temperature and voltage fields to avoid CRC mismatch
 - Regenerate dialect with updated XML from submodule
 - Bump package patch version
+- Added logs to CRC and signature failures in parser
